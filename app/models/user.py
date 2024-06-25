@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String, Boolean
-from database.database import Base
+from app.database.database import Base
 
 class User(Base):
     __tablename__ = "users"
@@ -13,3 +13,12 @@ class User(Base):
     bio = Column(String(255),nullable=True)
 
     is_deleted = Column(Boolean, default=False)
+
+    def __init__(self, uuid=None, user_name=None, email=None, password=None, profile=None, bio=None,is_deleted=False):
+        self.uuid = uuid
+        self.user_name = user_name
+        self.email = email
+        self.password =  password
+        self.profile = profile
+        self.bio = bio
+        self.is_deleted = is_deleted
