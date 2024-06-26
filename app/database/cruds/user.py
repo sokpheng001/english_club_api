@@ -84,4 +84,4 @@ async def delete_user_by_uuid(id:str, session:AsyncSession):
         return response 
  
 async def update_user_by_uuid(id:str, session:AsyncSession):
-          
+    pass
