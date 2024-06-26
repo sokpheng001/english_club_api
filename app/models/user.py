@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean
+from sqlalchemy import Column, Integer, String, Boolean,Date
 from app.database.database import Base
 
 class User(Base):
@@ -10,15 +10,15 @@ class User(Base):
     email = Column(String, unique=True, nullable=False,index=True)
     password = Column(String, unique=False,nullable=False)
     profile = Column(String,nullable=True )
+    created_date = Column(Date, nullable=True)
+    updated_date = Column(Date, nullable=True)
     bio = Column(String(255),nullable=True)
-
     is_deleted = Column(Boolean, default=False)
-
-    def __init__(self, uuid=None, user_name=None, email=None, password=None, profile=None, bio=None,is_deleted=False):
+    
+    def __init__(self, uuid=None, user_name=None, email=None, password=None, created_date=None, updated_date=None):
         self.uuid = uuid
         self.user_name = user_name
         self.email = email
         self.password =  password
-        self.profile = profile
-        self.bio = bio
-        self.is_deleted = is_deleted
+        self.created_date = created_date
+        self.updated_date = updated_date

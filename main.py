@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.routers import user, lesson
+from app.routers import user, lesson,exercise
 from app.database.database import Base, engine
 from sqlalchemy import create_engine, inspect
 
@@ -9,6 +9,7 @@ app = FastAPI()
 
 app.include_router(user.user_router)
 app.include_router(lesson.lesson_router)
+app.include_router(exercise.exercise_router)
 
 
 # Function to create tables if they do not exist
@@ -28,4 +29,4 @@ async def startup():
 
 import uvicorn
 if __name__ == "__main__":
-    uvicorn.run(app, host="127.0.0.1", port=8000,reload=True)
+    uvicorn.run("main:app", host="127.0.0.1", port=8000,reload=True)
