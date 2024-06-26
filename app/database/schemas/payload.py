@@ -1,3 +1,4 @@
+from typing import Optional
 from psycopg2 import Date
 from pydantic import BaseModel
 from datetime import date

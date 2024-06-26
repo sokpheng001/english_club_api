@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.routers import user, lesson,exercise
+from app.routers import user, lesson,exercise, question,skill
 from app.database.database import Base, engine
 from sqlalchemy import create_engine, inspect
 
@@ -9,7 +9,10 @@ app = FastAPI()
 
 app.include_router(user.user_router)
 app.include_router(lesson.lesson_router)
+app.include_router(question.question_router)
+app.include_router(skill.skill_router)
 app.include_router(exercise.exercise_router)
+
 
 
 # Function to create tables if they do not exist

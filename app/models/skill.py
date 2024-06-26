@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, Boolean,Date
 from app.database.database import Base
-from app.models.exercise import Exercise
+
 from sqlalchemy.orm import relationship
 
 class Skill(Base):
@@ -16,8 +16,10 @@ class Skill(Base):
     # exercise 
     exercises = relationship("Exercise",back_populates="skill")
 
-    def __init__(self, skill_name=None, thumbnail=None, description=None, skill_level=None, is_deleted=False):
+    def __init__(self, skill_uuid, skill_name, thumbnail, description, skill_level, is_deleted):
+        self.skill_uuid = skill_uuid
         self.skill_name = skill_name
         self.thumbnail = thumbnail
         self.description = description
         self.skill_level = skill_level
+        self.is_deleted = is_deleted

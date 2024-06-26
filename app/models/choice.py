@@ -13,3 +13,9 @@ class Choice(Base):
     # relationship
     question_id = Column(Integer, ForeignKey("questions.id"))
     question = relationship("Question", back_populates="choices")
+
+    def __init__(self, choice_uuid, choice_text, is_correct, question_id):
+        self.choice_uuid = choice_uuid
+        self.choice_text = choice_text
+        self.is_correct = is_correct
+        self.question_id = question_id

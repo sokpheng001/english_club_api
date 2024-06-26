@@ -8,7 +8,13 @@ class CreateExerciseDto(BaseModel):
     title: str
     thumbnail:str
     description: str
-    questions = Optional[list[question.ResponseQuestionDto]]
+    skill_uuid: Optional[str]=None
+    q_uuids: Optional[list[str]]
 
-class RepsonseExerciseDto(CreateExerciseDto):
-    pass
+class RepsonseExerciseDto(BaseModel):
+    ex_uuid:str
+    title: str
+    thumbnail:str
+    description: str
+    skill_uuid: Optional[str]=None
+    questions:Optional[list[question.ResponseQuestionDto]]

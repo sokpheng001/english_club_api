@@ -4,8 +4,8 @@ from typing import List, Optional
 
 
 class CreateChoiceDto(BaseModel):
-    tex:str
+    text:str
     is_correct:bool
 
-class ResponseChoice(CreateChoiceDto):
-    pass
+class ResponseChoiceDto(CreateChoiceDto):
+    choice_uuid:str
