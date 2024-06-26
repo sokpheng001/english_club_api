@@ -9,12 +9,31 @@ from fastapi import HTTPException, status
 from sqlalchemy import exc
 from datetime import date
 from app.database.schemas.payload import BaseResponse
-from app.database.schemas.user import RepsonseUserDto 
+from app.database.schemas.user import RepsonseUserDto, UpdateUserDto
  # Import asyncpg's UniqueViolationError
+
+
+async def get_list_all_users(session:AsyncSession):
+     query = select(User).where(User.is_deleted == False)
+     result = await session.execute(query)
+     users = result.scalars().all()
+     users_repsonse:RepsonseUserDto = []
+     for user in users:
+          users_repsonse.append(RepsonseUserDto(
+               user_uuid = user.uuid,
+               user_name = user.user_name,
+               email = user.email,
+               profile = user.profile,
+               bio= user.bio,
+               created_date=user.created_date,
+               updated_date= user.updated_date,
+               is_deleted = user.is_deleted,
+          ))
+     return users_repsonse
 
 async def create_user( create_user: user.CreateUserDto,session: AsyncSession):
     user_uuid = str(uuid.uuid4())
-    new_user = User(user_uuid, create_user.user_name, create_user.email, create_user.password)
+    new_user = User(user_uuid, create_user.user_name, create_user.email, create_user.password,created_date=date.today(), updated_date=date.today())
     
     try:
         session.add(new_user)
@@ -24,11 +43,13 @@ async def create_user( create_user: user.CreateUserDto,session: AsyncSession):
          status=int(status.HTTP_204_NO_CONTENT),
          payload = RepsonseUserDto(
                user_uuid = new_user.uuid,
-            user_name = new_user.user_name,
-            email = new_user.email,
-             profile = new_user.profile,
-            bio= new_user.bio,
-            is_deleted = new_user.is_deleted,
+               user_name = new_user.user_name,
+               email = new_user.email,
+               profile = new_user.profile,
+               bio= new_user.bio,
+               created_date= new_user.created_date,
+               updated_date= new_user.updated_date,
+               is_deleted = new_user.is_deleted,
          ),
          message=f"Created new user successfully",
     )
@@ -60,6 +81,8 @@ async def find_user_by_uuid(id:str,session: AsyncSession):
             email = u.email,
             profile =u.profile,
             bio= u.bio,
+            created_date= u.created_date,
+            updated_date= u.updated_date,
             is_deleted = u.is_deleted,
         ),
          message=f"User with ID {id} has been found",
@@ -83,5 +106,31 @@ async def delete_user_by_uuid(id:str, session:AsyncSession):
         )
         return response 
  
-async def update_user_by_uuid(id:str, session:AsyncSession):
-          
+async def update_user_by_uuid(id:str, user_update: UpdateUserDto ,session:AsyncSession):
+    user:User = select(User).filter(User.uuid == id)
+    result = await session.execute(user)
+    u:User = result.scalars().first()
+    u.updated_date = date.today()# set updated date
+    if u:
+        update_data = user_update.dict(exclude_unset=True)  # Exclude fields that were not set
+        for key, value in update_data.items():
+            setattr(u, key, value)
+        await session.commit()
+        await session.refresh(u)
+        return BaseResponse(
+                 date= date.today(),
+                 status=int(status.HTTP_200_OK),
+                 payload=RepsonseUserDto(
+                      user_uuid = u.uuid,
+                      user_name = u.user_name,
+                      email = u.email,
+                      profile = u.profile,
+                      bio= u.bio,
+                      created_date= u.created_date,
+                      updated_date= u.updated_date,
+                      is_deleted = u.is_deleted,
+                 ),
+                 message= f"User with id {id} has been updated successfully " ,
+            )
+    else:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User is not found")
