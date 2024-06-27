@@ -1,9 +1,12 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
+from app.database.database import get_db
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.database.cruds.lesson import create_new_lessons
 
 lesson_router = APIRouter()
 
 
-@lesson_router.get("/lessons/")
-async def lesson_home() -> dict[str, str]:
-    return {"message": "Hello Lesson"}
+@lesson_router.post("/lessons/")
+async def add_new_lesson(lesson, db:AsyncSession=Depends(get_db)):
+    return await create_new_lessons(lesson, get_db)
 

@@ -19,12 +19,29 @@ from app.utils.verify import is_valid_uuid
 async def create_new_skill(sk:skill.CreateSkillDto, session=AsyncSession):
 
     # verify that skill exists
-    sss = select(Skill).filter(Skill.skill_name==sk.skill_name).filter(Skill.skill_level==sk.skill_level)
+    sss = select(Skill).filter(Skill.skill_name.ilike(sk.skill_name)).filter(Skill.skill_level.ilike(sk.skill_level))
     re = await session.execute(sss)
-    result = re.scalars().all()
+    result_skill:Skill = re.scalars().first()
     
-    if result:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Skill with name {sk.skill_name} and level {sk.skill_level} already exists")
+    if result_skill:
+        for exuuid in sk.exercises_uuid:
+            ex = select(Exercise).filter(Exercise.ex_uuid==exuuid)
+            req = await session.execute(ex)
+            req_:Exercise = req.scalars().first()
+    
+            if req_.skill_id==None:
+                req_.skill_id = result_skill.id
+                session.add(req_)
+                await session.commit()
+                await session.refresh(req_)
+            else:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"The exercise with uuid {exuuid} has already been assigned to another skill")
+
+        await session.commit()
+        await session.refresh(result_skill)
+        return result_skill
+            
+        #raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Skill with name {sk.skill_name} and level {sk.skill_level} already exists")
 
     sk_uuid =str(uuid.uuid4())
 
@@ -33,22 +50,25 @@ async def create_new_skill(sk:skill.CreateSkillDto, session=AsyncSession):
     if sk.skill_name.upper() not in sname.__members__:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Skill name should be one of READING, WRITING or LISTENING, but you given {sk.skill_name}")
         
-
     all_exercises_related_skil:exercise.RepsonseExerciseDto = []   
     for ex_uuid_ in sk.exercises_uuid:
         if is_valid_uuid(ex_uuid_):
             ex = select(Exercise).filter(Exercise.ex_uuid == ex_uuid_) 
             que = await session.execute(ex)
             result:Exercise = que.scalars().first()
-            
+
+            if sk.skill_level.upper() !=result.exercise_level.upper():
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Quesion level should be the same as skill level, please check your exercise uuid given 🙈")
+
             if result.skill_id:
-                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"The exercise with uuid {ex_uuid_} has already been assigned to another skill")
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"The exercise with id {ex_uuid_} been assigned to another skill.")
             if result:
                 all_exercises_related_skil.append(exercise.RepsonseExerciseWithoutQuestionDto(
                     ex_uuid=result.ex_uuid,
                     title=result.title,
                     thumbnail=result.thumbnail,  
                     description=result.description,
+                    tip= result.tip,
                     exercise_level=result.exercise_level
                 ))
             if not result: 
@@ -57,7 +77,7 @@ async def create_new_skill(sk:skill.CreateSkillDto, session=AsyncSession):
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Invalid exercise uuid")
     
 
-    new_skill = Skill(sk_uuid, sk.skill_name, sk.thumbnail, sk.description, sk.skill_level,False)
+    new_skill = Skill(sk_uuid, sk.skill_name, sk.thumbnail, sk.description, sk.skill_level.upper(),False)
     try:
         session.add(new_skill) # add to database
         await session.commit()
@@ -107,11 +127,11 @@ async def delete_skill_by_uuid(skill_uuid:str, session=AsyncSession):
         )
 
 async def get_all_skills_by_skill_name(name:str, session=AsyncSession):
-    query = select(Skill).filter(Skill.skill_name.ilike(f"%{name}%")).order_by(Skill.skill_level)
+    query = select(Skill).filter(Skill.skill_name.ilike(f"{name}")).order_by(Skill.skill_level)
     result = await session.execute(query)
     skills = result.scalars().all()
     if not skills:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Skill not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Skill not found 😶‍🌫️")
     
     return payload.BaseResponse(
         date=date.today(),
@@ -178,7 +198,6 @@ async def get_skill_by_name_and_level(name, level, session=AsyncSession):
         payload=skls,
         message=f"List all skills",
     )
-
 
 
 async def list_all_skills(session:AsyncSession):

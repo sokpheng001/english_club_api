@@ -24,5 +24,5 @@ async def delete_exercise(id:str, db:AsyncSession=Depends(get_db)):
     return await delete_exercise_by_uuid(id, db)
 
 @exercise_router.get("/exercises/{id}")
-async def get_exercise_by_uuid(id:str, db:AsyncSession=Depends(get_db)):
+async def get_exercise_by_id(id:str, db:AsyncSession=Depends(get_db)):
     return await find_exercise_by_uuid(id, db)

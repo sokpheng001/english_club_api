@@ -25,7 +25,7 @@ async def get_skill_by_name(name:str, db:AsyncSession=Depends(get_db)):
     skill = await get_all_skills_by_skill_name(name, db)
     return skill
 
-@skill_router.get("/skills/{name}/level={level}")
+@skill_router.get("/skills/skill_name={name}/level={level}")
 async def get_skills_by_name_and_level_(name:str,level:str, db:AsyncSession=Depends(get_db)):
     skill = await get_skill_by_name_and_level(name, level, db)
     return skill

@@ -11,6 +11,7 @@ class Question(Base):
     text = Column(String, index=True)
     voice = Column(String,nullable=True)
     video = Column(String,nullable=True)
+    image = Column(String, nullable=True)
     type = Column(String,nullable=False)  # e.g., "multiple-choice", "fill-in-the-blank", "true-false"
     correct_answer = Column(JSON,nullable=False) 
     question_level = Column(String, nullable=False)
@@ -20,11 +21,12 @@ class Question(Base):
     exercise = relationship("Exercise",back_populates="questions")
     choices = relationship("Choice",back_populates="question")
 
-    def __init__(self, q_uuid=None, text=None, voice=None, video=None, type=None, correct_answer=None, exercise_id = None, question_level=None):
+    def __init__(self, q_uuid=None, text=None, voice=None, video=None, image=None, type=None, correct_answer=None, exercise_id = None, question_level=None):
         self.q_uuid = q_uuid
         self.text = text
         self.voice = voice
         self.video = video
+        self.image = image
         self.type = type
         self.correct_answer = correct_answer
         self.exercise_id = exercise_id

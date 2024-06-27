@@ -8,6 +8,7 @@ class CreateQuestionDto(BaseModel):
     question_text: str
     voice: Optional[str] = None
     video: Optional[str] = None
+    image: Optional[str] = None
     type: Optional[str] # e.g., "multiple-choice", "fill-in-the-blank", "true-false"
     question_level: Optional[str] = "A1"
     correct_answer: Optional[list[Answer]] 
@@ -19,6 +20,7 @@ class ResponseQuestionDto(BaseModel):
     question_text: str
     voice: Optional[str] = None
     video: Optional[str] = None
+    image: Optional[str] = None
     type: Optional[str] # e.g., "multiple-choice", "fill-in-the-blank", "true-false"
     question_level: Optional[str]
     correct_answer: Optional[list[Answer]]

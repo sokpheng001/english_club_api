@@ -19,7 +19,7 @@ async def add_question(q:question.CreateQuestionDto, session:AsyncSession):
 
     try:
         question_uuid = str(uuid.uuid4())
-        new_question =  Question(question_uuid,q.question_text, q.voice, q.video,q.type,correct_answer, question_level=q.question_level.upper())
+        new_question =  Question(question_uuid,q.question_text, q.voice, q.video, q.image,q.type,correct_answer, question_level=q.question_level.upper())
         
         session.add(new_question)
         await session.commit()
@@ -44,6 +44,7 @@ async def add_question(q:question.CreateQuestionDto, session:AsyncSession):
                 voice=new_question.voice,
                 video=new_question.video,
                 type=new_question.type,
+                image=new_question.image,
                 question_level=new_question.question_level,
                 correct_answer=new_question.correct_answer,
                 choices=array_of_choices
@@ -53,6 +54,54 @@ async def add_question(q:question.CreateQuestionDto, session:AsyncSession):
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
     
+
+
+async def get_question_by_level(level:str, session=AsyncSession):
+    if level.upper() not in MyLevel.__members__:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Level should be one of A1 to C2, but you given {level}")
+    
+    qq  = select(Question).filter(Question.question_level.ilike(level))
+    result = await session.execute(qq)
+    questions = result.scalars().all()
+
+
+    if not questions:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Question not found")
+    
+    questions_repsonse:question.ResponseQuestionDto= []
+
+    for q in questions:
+        get_all_choices:choice.ResponseChoiceDto = []
+        all_choices = select(Choice).filter(Choice.question_id == q.id)
+        _all_choices = await session.execute(all_choices)
+        get_choices = _all_choices.scalars().all()
+        for ch in get_choices:
+            get_all_choices.append(choice.ResponseChoiceDto(
+                choice_uuid= ch.choice_uuid,
+                text=ch.choice_text,
+                
+                is_correct=ch.is_correct
+            ))
+        questions_repsonse.append(question.ResponseQuestionDto(
+            q_uuid=q.q_uuid,
+            question_text=q.text,
+            voice=q.voice,
+            video=q.video,
+            image=q.image,
+            type=q.type,
+            question_level=q.question_level,
+            correct_answer=q.correct_answer,
+            choices=get_all_choices
+        ))
+    
+    return payload.BaseResponse(
+        date=date.today(),
+        status=int(status.HTTP_200_OK),
+        payload=questions_repsonse,
+        message= "Questions have been found."
+    )
+
+
 async def list_all_questions(session:AsyncSession):
     try:
         query= select(Question)
@@ -80,6 +129,7 @@ async def list_all_questions(session:AsyncSession):
                 question_text=q.text,
                 voice=q.voice,
                 video=q.video,
+                image=q.image,
                 type=q.type,
                 question_level=q.question_level,
                 correct_answer=q.correct_answer,
@@ -142,6 +192,7 @@ async def get_question_by_uuid(id: str, session=AsyncSession):
             question_text=data.text,
             voice=data.voice,
             video=data.video,
+            image=data.image,
             type=data.type,
             question_level=data.question_level,
             correct_answer=data.correct_answer,

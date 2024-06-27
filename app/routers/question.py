@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 from app.database.schemas import question
 from app.database.database import get_db
-from app.database.cruds.question import add_question, list_all_questions, delete_question_by_uuid,get_question_by_uuid
+from app.database.cruds.question import add_question, list_all_questions, delete_question_by_uuid,get_question_by_uuid, get_question_by_level
 from sqlalchemy.ext.asyncio import AsyncSession
 question_router = APIRouter()
 
@@ -26,3 +26,9 @@ async def delete_question(id:str,db:AsyncSession=Depends(get_db)):
 async def find_question(id:str,db:AsyncSession=Depends(get_db)):
     re = await get_question_by_uuid(id,db)
     return re
+
+@question_router.get("/questions/q-level={level}/")
+async def get_questions_by_level(level:str,db:AsyncSession=Depends(get_db)):
+    re = await get_question_by_level(level,db)
+    return re
+    pass

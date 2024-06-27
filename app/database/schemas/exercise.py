@@ -9,6 +9,7 @@ class CreateExerciseDto(BaseModel):
     title: str
     thumbnail:str
     description: str
+    tip:str
     # skill_uuid: Optional[str]=None
     q_uuids: Optional[list[str]]
     # exercise_level: Optional[str] = "A1"
@@ -19,7 +20,8 @@ class RepsonseExerciseDto(BaseModel):
     title: str
     thumbnail:str
     description: str
-    exercise_level: Optional[list[Level]]
+    tip:str
+    exercise_level: Optional[str]
     # skill_uuid: Optional[str]=None
     questions:Optional[list[question.ResponseQuestionDto]]
 
@@ -28,6 +30,7 @@ class RepsonseExerciseWithoutQuestionDto(BaseModel):
     title: str
     thumbnail:str
     description: str
-    exercise_level: Optional[list[Level]]
+    tip:str
+    exercise_level: Optional[str]
     # skill_uuid: Optional[str]=None
     # questions:Optional[list[question.ResponseQuestionDto]]

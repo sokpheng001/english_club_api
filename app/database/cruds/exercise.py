@@ -28,67 +28,76 @@ async def create_exercise(ex:CreateExerciseDto, session:AsyncSession):
     # if ex.exercise_level.upper() not in MyLevel.__members__:
     #     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Exercise level should be one of A1 to C2, but you given {ex.exercise_level}")
     try:
-        exercise_levels_follow_question_levels:Level = []
         # fetch question for the exercise
-        if is_valid_uuid(ex.q_uuids[0]):
-            list_of_questions:question.ResponseQuestionDto = []
-            for qid in ex.q_uuids:
-                if not is_valid_uuid(qid):
-                    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid question UUID 😏")
-                qq = select(Question).where(Question.q_uuid == qid)
-                req = await session.execute(qq)
-                q = req.scalars().first()
-                #check if the question is already assigned to the exercise
+        # check if uuid of question is valid
+        for quuid in ex.q_uuids:
+            if not is_valid_uuid(quuid):
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid question UUID 😏")
+        if len(ex.q_uuids) > 1:
+            if all(x==ex.q_uuids[0] for x in ex.q_uuids):
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Question UUIDs are same 😏")
 
-                if not q:
-                    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Question {qid} is not found 😶‍🌫️")
-                if q.exercise_id:
-                    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Question {q.q_uuid} is already assigned to the exercise 😶‍🌫️")
-                # get all  choices for the each question
-                ch = select(Choice).where(Choice.question_id == q.id)
-                req = await session.execute(ch)
-                all_choices_for_each_question = req.scalars().all()
-                response_for_choices:choice.ResponseChoiceDto = []
-                for cho in all_choices_for_each_question:
-                    response_for_choices.append(choice.ResponseChoiceDto(
-                        choice_uuid=cho.choice_uuid,
-                        text=cho.choice_text,
-                        is_correct=cho.is_correct
-                    ))
-                exercise_levels_follow_question_levels.append(Level(level=q.question_level))
-                list_of_questions.append(question.ResponseQuestionDto(
-                    q_uuid= q.q_uuid,
-                    question_text = q.text,
-                    voice= q.voice,
-                    video= q.video,
-                    type= q.type,
-                    question_level=q.question_level,
-                    correct_answer= q.correct_answer,
-                    choices=response_for_choices
+        list_of_questions:question.ResponseQuestionDto = []
+        for qid in ex.q_uuids:
+
+            qq = select(Question).filter(Question.q_uuid == qid)
+            req = await session.execute(qq)
+            q = req.scalars().first()
+            #check if the question is already assigned to the exercise
+            if not q:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Question {qid} is not found 😶‍🌫️")
+            if q.exercise_id:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Question {q.q_uuid} is already assigned to the exercise 😶‍🌫️")
+            # get all  choices for the each question
+            ch = select(Choice).where(Choice.question_id == q.id)
+            req = await session.execute(ch)
+            all_choices_for_each_question = req.scalars().all()
+            response_for_choices:choice.ResponseChoiceDto = []
+            for cho in all_choices_for_each_question:
+                response_for_choices.append(choice.ResponseChoiceDto(
+                    choice_uuid=cho.choice_uuid,
+                    text=cho.choice_text,
+                    is_correct=cho.is_correct
                 ))
-        
-            exercise_uuid =str(uuid.uuid4()) # generate unique identifier for the exercise
+            list_of_questions.append(question.ResponseQuestionDto(
+                q_uuid= q.q_uuid,
+                question_text = q.text,
+                voice= q.voice,
+                video= q.video,
+                type= q.type,
 
-            new_exercise  = None
-            level = [ans.dict() for ans in exercise_levels_follow_question_levels]
-            new_exercise =  Exercise(exercise_uuid, ex.title,ex.thumbnail ,
-                                         ex.description,
-                                         exercise_level=level)
-            session.add(new_exercise) # add to database
-            await session.commit()
-            await session.refresh(new_exercise)
-            # update exercise id in question
-            for qid in ex.q_uuids:
-                qq = select(Question).filter(Question.q_uuid == qid)
-                req = await session.execute(qq)
-                q = req.scalars().first()
-                if q:
-                    if not q.exercise_id:
-                        q.exercise_id = new_exercise.id
-                        await session.commit()
-                        await session.refresh(q)
-        else:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid question uuid for exercise 😏")
+                question_level=q.question_level,
+                correct_answer= q.correct_answer,
+                choices=response_for_choices
+            ))
+        # check if all questions have different levels
+        if len(list_of_questions) >1:
+            for qq in list_of_questions:
+                if qq.question_level != list_of_questions[0].question_level:
+                    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"All questions must be in the same level 😉, please check question before input.")
+
+        
+        #create a question
+        exercise_uuid =str(uuid.uuid4()) # generate unique identifier for the exercise
+        new_exercise  = None
+        new_exercise =  Exercise(exercise_uuid, ex.title,ex.thumbnail,
+                                     ex.description,
+                                     tip = ex.tip,
+                                     exercise_level=q.question_level,
+                                     )
+        session.add(new_exercise) # add to database
+        await session.commit()
+        await session.refresh(new_exercise)
+        # update exercise id in question
+        for qid in ex.q_uuids:
+            qq = select(Question).filter(Question.q_uuid == qid)
+            req = await session.execute(qq)
+            q = req.scalars().first()
+            if q:
+                if not q.exercise_id:
+                    q.exercise_id = new_exercise.id
+                    await session.commit()
+                    await session.refresh(q)
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"{e}")
     return payload.BaseResponse(
@@ -99,7 +108,8 @@ async def create_exercise(ex:CreateExerciseDto, session:AsyncSession):
             title=new_exercise.title,
             thumbnail=new_exercise.thumbnail,
             description=new_exercise.description,  
-            exercise_level=exercise_levels_follow_question_levels,
+            tip=new_exercise.tip,
+            exercise_level=q.question_level,
             questions=list_of_questions
         ),
         message="Exercise has been created successfully"
@@ -123,7 +133,7 @@ async def delete_exercise_by_uuid(id:str, session:AsyncSession):
 
     return payload.BaseResponse(
         date=date.today(),
-        status=int(status.HTTP_200_OK),
+        status=int(status.HTTP_204_NO_CONTENT),
         payload=[],
         message="Exercise has been deleted successfully"
     )
@@ -131,19 +141,20 @@ async def delete_exercise_by_uuid(id:str, session:AsyncSession):
 
 async def list_all_exercises(session:AsyncSession):
     try:
-        query = select(Exercise)
+        query = select(Exercise).order_by(Exercise.exercise_level)
         result = await session.execute(query)
         exercises = result.scalars().all()   
         
-        #get questions for each exercise
-        all_questions:question.ResponseQuestionDto = []
+        all_exercises:RepsonseExerciseDto = []
+
         for exercise in exercises:     
             que = select(Question).where(Question.exercise_id==exercise.id)
             req = await session.execute(que)
             q = req.scalars().all()
-
+            #get questions for each exercise
+            all_questions:question.ResponseQuestionDto = []
             for qu in q:
-                # get all  choices for the each question
+            # get all  choices for the each question
                 ch = select(Choice).where(Choice.question_id == qu.id)
                 req = await session.execute(ch)
                 all_choices_for_each_question = req.scalars().all()
@@ -154,7 +165,6 @@ async def list_all_exercises(session:AsyncSession):
                         text=cho.choice_text,
                         is_correct=cho.is_correct
                     ))
-
                 all_questions.append(question.ResponseQuestionDto(
                     q_uuid= qu.q_uuid,
                     question_text = qu.text,
@@ -165,18 +175,22 @@ async def list_all_exercises(session:AsyncSession):
                     choices= response_for_choices,
                     question_level=qu.question_level
                 ))
+            all_exercises.append(RepsonseExerciseDto(
+                ex_uuid =exercise.ex_uuid,
+                title=exercise.title,
+                thumbnail=exercise.thumbnail,
+                description=exercise.description,
+                tip=exercise.tip,
+                # skill_uuid = str(None if ex.skill_id==None else ex.skill_id),
+                questions= all_questions,
+                exercise_level= exercise.exercise_level
+            )) # clear all questions because don't want to use them again for new exercises
+
+
         return payload.BaseResponse(
             date=date.today(),
             status=int(status.HTTP_200_OK),
-            payload= [RepsonseExerciseDto(
-                ex_uuid =ex.ex_uuid,
-                title=ex.title,
-                thumbnail=ex.thumbnail,
-                description=ex.description,
-                # skill_uuid = str(None if ex.skill_id==None else ex.skill_id),
-                questions= all_questions,
-                exercise_level= ex.exercise_level
-            ) for ex in exercises],
+            payload= all_exercises,
             message="List all exercises"
         )
     except Exception as e:
@@ -231,6 +245,7 @@ async def find_exercise_by_uuid(id:str, session=AsyncSession):
             title=ex.title,
             thumbnail=ex.thumbnail,
             description=ex.description,
+            tip=ex.tip,
             # skill_uuid = str(None if ex.skill_id==None else ex.skill_id),
             questions=all_questions,
             exercise_level= ex.exercise_level
@@ -285,6 +300,7 @@ async def get_exercises_by_skill_id(skill_id:str, session:AsyncSession):
             title=ex.title,
             thumbnail=ex.thumbnail,
             description=ex.description,
+            tip=ex.tip,
             # skill_uuid = str(None if ex.skill_id==None else ex.skill_id),
             questions= all_questions
         ) for ex in all_exercises],

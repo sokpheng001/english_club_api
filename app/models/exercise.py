@@ -11,16 +11,18 @@ class Exercise(Base):
     title = Column(String, nullable=False)
     thumbnail = Column(String, nullable=True)
     description = Column(String, nullable=True)
-    exercise_level = Column(JSON, nullable=False)
+    tip = Column(String, nullable=True)
+    exercise_level = Column(String, nullable=False)
     #
     skill_id = Column(Integer, ForeignKey("skills.id"), nullable=True)
     skill = relationship("Skill",back_populates="exercises")
     questions = relationship("Question",back_populates="exercise")
 
-    def __init__(self,uuid ,title=None, thumbnail=None, description=None, skill_id=None, exercise_level=None):
+    def __init__(self,uuid ,title=None, thumbnail=None, description=None,tip=None, skill_id=None, exercise_level=None):
         self.ex_uuid = uuid
         self.title = title
         self.thumbnail = thumbnail
         self.description = description
         self.skill_id = skill_id
         self.exercise_level = exercise_level
+        self.tip = tip

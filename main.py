@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.routers import user, lesson,exercise, question,skill
+from app.routers import user, lesson,exercise, question,skill,file,auth
 from app.database.database import Base, engine
 from sqlalchemy import create_engine, inspect
 
@@ -7,6 +7,8 @@ app = FastAPI()
 
 # Include routers
 
+app.include_router(auth.auth_router)
+app.include_router(file.file_router)
 app.include_router(user.user_router)
 app.include_router(question.question_router)
 app.include_router(exercise.exercise_router)
