@@ -11,25 +11,16 @@ from app.models.exercise import Exercise
 from app.utils.verify import is_valid_uuid
 from app.database.schemas.english_level import MyLevel
 
-
-
-
 async def add_question(q:question.CreateQuestionDto, session:AsyncSession):
     
     if q.question_level.upper() not in MyLevel.__members__:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Level should be one of A1 to C2, but you given {q.question_level}")
     correct_answer = [ans.dict() for ans in q.correct_answer]
+
     try:
         question_uuid = str(uuid.uuid4())
-        new_question = None
-        is_uuid = is_valid_uuid(q.exercise_uuid)
-        if is_uuid:
-            que = select(Exercise).filter(Exercise.ex_uuid == q.exercise_uuid)
-            result = await session.execute(que)
-            ex:Exercise = result.scalars().first()
-            new_question = Question(question_uuid,q.question_text, q.voice, q.video, q.type,correct_answer, question_level=q.question_level, exercise_id=ex.id)
-        else: 
-            new_question = Question(question_uuid,q.question_text, q.voice, q.video, q.type,correct_answer)
+        new_question =  Question(question_uuid,q.question_text, q.voice, q.video,q.type,correct_answer, question_level=q.question_level)
+        
         session.add(new_question)
         await session.commit()
         await session.refresh(new_question)
@@ -53,6 +44,7 @@ async def add_question(q:question.CreateQuestionDto, session:AsyncSession):
                 voice=new_question.voice,
                 video=new_question.video,
                 type=new_question.type,
+                question_level=new_question.question_level,
                 correct_answer=new_question.correct_answer,
                 choices=array_of_choices
             ),
@@ -104,12 +96,16 @@ async def list_all_questions(session:AsyncSession):
 
 
 async def delete_question_by_uuid(id:str, session:AsyncSession):
+    if not is_valid_uuid(id):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid uuid provided 😏")
     query = select(Question).filter(Question.q_uuid == id)
     result = await session.execute(query)
     q = result.scalars().first()
 
     if not q:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Question is not found")
+    if q.exercise_id:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Cannot delete question because it is belonging to another excercise 😉")
     else:
         # delete all choices related to the question
         query = select(Choice).filter(Choice.question_id == q.id)
@@ -129,31 +125,38 @@ async def delete_question_by_uuid(id:str, session:AsyncSession):
         )
     
 async def get_question_by_uuid(id: str, session=AsyncSession):
-    q = select(Question).filter(Question.q_uuid==id)
-    result = await session.execute(q)
-    data:Question =  result.scalars().first()
-    ch = select(Choice).filter(Choice.question_id == data.id)
-    result1 = await session.execute(ch)
-    choices = result1.scalars().all()
-    
-    response:question.ResponseQuestionDto = question.ResponseQuestionDto(
-        q_uuid=data.q_uuid,
-        question_text=data.text,
-        voice=data.voice,
-        video=data.video,
-        type=data.type,
-        question_level=data.question_level,
-        correct_answer=data.correct_answer,
-        choices=[choice.ResponseChoiceDto(
-            choice_uuid=ch.choice_uuid,
-            text=ch.choice_text,
-            is_correct=ch.is_correct
-        ) for ch in choices]
-    )
-    return payload.BaseResponse(
-        date=date.today(),
-        status=int(status.HTTP_200_OK),
-        payload=response,
-        message= "Question has been retrieved successfully."
-    )
+    if is_valid_uuid(id):
+        q = select(Question).filter(Question.q_uuid==id)
+        result = await session.execute(q)
+        data:Question =  result.scalars().first()
+
+        if not data:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Question is not found 😶‍🌫️")
+
+        ch = select(Choice).filter(Choice.question_id == data.id)
+        result1 = await session.execute(ch)
+        choices = result1.scalars().all()
+        
+        response:question.ResponseQuestionDto = question.ResponseQuestionDto(
+            q_uuid=data.q_uuid,
+            question_text=data.text,
+            voice=data.voice,
+            video=data.video,
+            type=data.type,
+            question_level=data.question_level,
+            correct_answer=data.correct_answer,
+            choices=[choice.ResponseChoiceDto(
+                choice_uuid=ch.choice_uuid,
+                text=ch.choice_text,
+                is_correct=ch.is_correct
+            ) for ch in choices]
+        )
+        return payload.BaseResponse(
+            date=date.today(),
+            status=int(status.HTTP_200_OK),
+            payload=response,
+            message= "Question has been retrieved successfully."
+        )
+    else:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Question uuid is invalid 😏")
     

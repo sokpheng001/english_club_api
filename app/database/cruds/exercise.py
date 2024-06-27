@@ -4,6 +4,7 @@ from sqlalchemy.future import select
 from app.models.exercise import Exercise
 from app.models.question import Question
 from app.models.choice import Choice
+import json
 
 from app.models.skill import Skill
 import uuid
@@ -13,26 +14,33 @@ from app.database.schemas import payload, question, choice
 from app.database.schemas.exercise import CreateExerciseDto, RepsonseExerciseDto
 from app.utils.verify import is_valid_uuid
 from app.database.schemas.english_level import MyLevel
+from app.database.schemas.english_level_template import Level
+from app.utils.verify import is_valid_uuid
+
+class LevelEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, Level):
+            return obj.__dict__  # Convert Level object to a dictionary
+        return super().default(obj)
 
 async def create_exercise(ex:CreateExerciseDto, session:AsyncSession):
     
-    if ex.exercise_level.upper() not in MyLevel.__members__:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Skill level should be one of A1 to C2, but you given {ex.exercise_level}")
+    # if ex.exercise_level.upper() not in MyLevel.__members__:
+    #     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Exercise level should be one of A1 to C2, but you given {ex.exercise_level}")
     try:
-        sk:Skill = None
-
-        if ex.skill_uuid is not None or "string":
-            sq = select(Skill).where(Skill.skill_uuid== ex.skill_uuid)
-            re = await session.execute(sq)
-            sk:Skill = re.scalars().first()
+        exercise_levels_follow_question_levels:Level = []
         # fetch question for the exercise
         if is_valid_uuid(ex.q_uuids[0]):
-
             list_of_questions:question.ResponseQuestionDto = []
             for qid in ex.q_uuids:
                 qq = select(Question).where(Question.q_uuid == qid)
                 req = await session.execute(qq)
                 q = req.scalars().first()
+                #check if the question is already assigned to the exercise
+                if not q:
+                    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Question {qid} does not exist 😶‍🌫️")
+                if q.exercise_id:
+                    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Question {q.q_uuid} is already assigned to the exercise 😶‍🌫️")
                 # get all  choices for the each question
                 ch = select(Choice).where(Choice.question_id == q.id)
                 req = await session.execute(ch)
@@ -44,7 +52,7 @@ async def create_exercise(ex:CreateExerciseDto, session:AsyncSession):
                         text=cho.choice_text,
                         is_correct=cho.is_correct
                     ))
-    
+                exercise_levels_follow_question_levels.append(Level(level=q.question_level))
                 list_of_questions.append(question.ResponseQuestionDto(
                     q_uuid= q.q_uuid,
                     question_text = q.text,
@@ -59,15 +67,25 @@ async def create_exercise(ex:CreateExerciseDto, session:AsyncSession):
             exercise_uuid =str(uuid.uuid4()) # generate unique identifier for the exercise
 
             new_exercise  = None
-            if sk is None: 
-                new_exercise =  Exercise(exercise_uuid, ex.title,ex.thumbnail ,ex.description,exercise_level=ex.exercise_level)
-            else:
-                new_exercise =  Exercise(exercise_uuid, ex.title,ex.thumbnail ,ex.description,skill_id=sk.id,exercise_level=ex.exercise_level)
+            level = [ans.dict() for ans in exercise_levels_follow_question_levels]
+            new_exercise =  Exercise(exercise_uuid, ex.title,ex.thumbnail ,
+                                         ex.description,
+                                         exercise_level=level)
             session.add(new_exercise) # add to database
             await session.commit()
             await session.refresh(new_exercise)
+            # update exercise id in question
+            for qid in ex.q_uuids:
+                qq = select(Question).filter(Question.q_uuid == qid)
+                req = await session.execute(qq)
+                q = req.scalars().first()
+                if q:
+                    if not q.exercise_id:
+                        q.exercise_id = new_exercise.id
+                        await session.commit()
+                        await session.refresh(q)
         else:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Missing question uuid for exercise 😏")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid question uuid for exercise 😏")
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"{e}")
     return payload.BaseResponse(
@@ -77,12 +95,35 @@ async def create_exercise(ex:CreateExerciseDto, session:AsyncSession):
             ex_uuid =new_exercise.ex_uuid,
             title=new_exercise.title,
             thumbnail=new_exercise.thumbnail,
-            description=new_exercise.description,
-            skill_uuid= None if sk==None else sk.skill_uuid,
-            exercise_level=new_exercise.exercise_level,
+            description=new_exercise.description,  
+            exercise_level=exercise_levels_follow_question_levels,
             questions=list_of_questions
         ),
         message="Exercise has been created successfully"
+    )
+
+
+
+async def delete_exercise_by_uuid(id:str, session:AsyncSession):
+    if not is_valid_uuid(id):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid exercise uuid {id} 😏")
+    que = select(Exercise).where(Exercise.ex_uuid ==id)
+    result = await session.execute(que)
+    ex = result.scalars().first()
+
+    if not ex:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Exercise with uuid {id} does not exist 😶‍🌫️")
+    if ex.skill_id:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Cannot delete because the question is belonging to another skill 😉")
+
+    await session.delete(ex)
+    await session.commit()
+
+    return payload.BaseResponse(
+        date=date.today(),
+        status=int(status.HTTP_200_OK),
+        payload=[],
+        message="Exercise has been deleted successfully"
     )
 
 
@@ -119,9 +160,9 @@ async def list_all_exercises(session:AsyncSession):
                     video= qu.video,
                     type= qu.type,
                     correct_answer = qu.correct_answer,
-                    choices= response_for_choices
+                    choices= response_for_choices,
+                    question_level=qu.question_level
                 ))
-
         return payload.BaseResponse(
             date=date.today(),
             status=int(status.HTTP_200_OK),
@@ -131,9 +172,10 @@ async def list_all_exercises(session:AsyncSession):
                 thumbnail=ex.thumbnail,
                 description=ex.description,
                 # skill_uuid = str(None if ex.skill_id==None else ex.skill_id),
-                questions= all_questions
+                questions= all_questions,
+                exercise_level= ex.exercise_level
             ) for ex in exercises],
-            message="Exercise has been created successfully"
+            message="List all exercises"
         )
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, ForeignKey, Integer, String, Boolean,Date
+from sqlalchemy import Column, ForeignKey, Integer, String, Boolean,Date,JSON
 from app.database.database import Base
 from sqlalchemy.orm import relationship
 from app.models.skill import Skill
@@ -11,7 +11,7 @@ class Exercise(Base):
     title = Column(String, nullable=False)
     thumbnail = Column(String, nullable=True)
     description = Column(String, nullable=True)
-    exercise_level = Column(String, nullable=False)
+    exercise_level = Column(JSON, nullable=False)
     #
     skill_id = Column(Integer, ForeignKey("skills.id"), nullable=True)
     skill = relationship("Skill",back_populates="exercises")
