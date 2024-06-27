@@ -6,7 +6,7 @@ from app.database.schemas import exercise
 class CreateSkillDto(BaseModel):
     skill_name:str = "Reading"
     thumbnail:Optional[str]= "cstad.jpg"
-    description:str = "This is skill will help you"
+    description:str = "This skill will help you"
     skill_level:str="A1"
 
 class ResponseSkillDto(BaseModel):

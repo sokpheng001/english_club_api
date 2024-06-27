@@ -7,5 +7,6 @@ class Lesson(Base):
     name = Column(String, unique=True)
     description = Column(String, nullable=False)
     thumbnail = Column(String, nullable=True)
+    lesson_level = Column(String, nullable=False)
     is_deleted = Column(Boolean, default=False)
 

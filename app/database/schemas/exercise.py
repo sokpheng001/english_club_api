@@ -10,11 +10,14 @@ class CreateExerciseDto(BaseModel):
     description: str
     skill_uuid: Optional[str]=None
     q_uuids: Optional[list[str]]
+    exercise_level: Optional[str]
+    
 
 class RepsonseExerciseDto(BaseModel):
     ex_uuid:str
     title: str
     thumbnail:str
     description: str
-    skill_uuid: Optional[str]=None
+    exercise_level: Optional[str]
+    # skill_uuid: Optional[str]=None
     questions:Optional[list[question.ResponseQuestionDto]]

@@ -8,10 +8,10 @@ app = FastAPI()
 # Include routers
 
 app.include_router(user.user_router)
-app.include_router(lesson.lesson_router)
 app.include_router(question.question_router)
-app.include_router(skill.skill_router)
 app.include_router(exercise.exercise_router)
+app.include_router(skill.skill_router)
+app.include_router(lesson.lesson_router)
 
 
 
