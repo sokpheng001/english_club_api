@@ -19,7 +19,7 @@ async def add_question(q:question.CreateQuestionDto, session:AsyncSession):
 
     try:
         question_uuid = str(uuid.uuid4())
-        new_question =  Question(question_uuid,q.question_text, q.voice, q.video,q.type,correct_answer, question_level=q.question_level)
+        new_question =  Question(question_uuid,q.question_text, q.voice, q.video,q.type,correct_answer, question_level=q.question_level.upper())
         
         session.add(new_question)
         await session.commit()

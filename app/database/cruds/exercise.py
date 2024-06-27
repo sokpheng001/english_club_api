@@ -33,12 +33,15 @@ async def create_exercise(ex:CreateExerciseDto, session:AsyncSession):
         if is_valid_uuid(ex.q_uuids[0]):
             list_of_questions:question.ResponseQuestionDto = []
             for qid in ex.q_uuids:
+                if not is_valid_uuid(qid):
+                    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid question UUID 😏")
                 qq = select(Question).where(Question.q_uuid == qid)
                 req = await session.execute(qq)
                 q = req.scalars().first()
                 #check if the question is already assigned to the exercise
+
                 if not q:
-                    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Question {qid} does not exist 😶‍🌫️")
+                    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Question {qid} is not found 😶‍🌫️")
                 if q.exercise_id:
                     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Question {q.q_uuid} is already assigned to the exercise 😶‍🌫️")
                 # get all  choices for the each question
@@ -103,16 +106,15 @@ async def create_exercise(ex:CreateExerciseDto, session:AsyncSession):
     )
 
 
-
 async def delete_exercise_by_uuid(id:str, session:AsyncSession):
     if not is_valid_uuid(id):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid exercise uuid {id} 😏")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid exercise uuid 😏")
     que = select(Exercise).where(Exercise.ex_uuid ==id)
     result = await session.execute(que)
     ex = result.scalars().first()
 
     if not ex:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Exercise with uuid {id} does not exist 😶‍🌫️")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Exercise with uuid {id} not found 😶‍🌫️")
     if ex.skill_id:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Cannot delete because the question is belonging to another skill 😉")
 
@@ -181,6 +183,62 @@ async def list_all_exercises(session:AsyncSession):
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
     
 
+async def find_exercise_by_uuid(id:str, session=AsyncSession):
+    if not is_valid_uuid(id):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid exercise uuid {id} 😏")
+    que = select(Exercise).where(Exercise.ex_uuid ==id)
+    result = await session.execute(que)
+    ex:Exercise = result.scalars().first()
+
+    if not ex:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Exercise with uuid {id} not found 😶‍🌫️")
+    
+    # get question throught exercise
+    que = select(Question).filter(Question.exercise_id==ex.id)
+    req = await session.execute(que)
+    qs = req.scalars().all()
+    all_questions:question.ResponseQuestionDto = []
+
+    if qs:
+        for  q in qs:
+            # get all  choices for the each question
+            ch = select(Choice).where(Choice.question_id == q.id)
+            req = await session.execute(ch)
+            all_choices_for_each_question = req.scalars().all()
+            response_for_choices:choice.ResponseChoiceDto = []
+            for cho in all_choices_for_each_question:
+                response_for_choices.append(choice.ResponseChoiceDto(
+                    choice_uuid=cho.choice_uuid,
+                    text=cho.choice_text,
+                    is_correct=cho.is_correct
+                ))
+            all_questions.append(question.ResponseQuestionDto(
+                q_uuid= q.q_uuid,
+                question_text = q.text,
+                voice= q.voice,
+                video= q.video,
+                type= q.type,
+                correct_answer = q.correct_answer,
+                choices= response_for_choices,
+                question_level=q.question_level
+            ))
+
+    return payload.BaseResponse(
+        date=date.today(),
+        status=int(status.HTTP_200_OK),
+        payload= RepsonseExerciseDto(
+            ex_uuid =ex.ex_uuid,
+            title=ex.title,
+            thumbnail=ex.thumbnail,
+            description=ex.description,
+            # skill_uuid = str(None if ex.skill_id==None else ex.skill_id),
+            questions=all_questions,
+            exercise_level= ex.exercise_level
+        ),
+        message="List all exercises"
+    )
+
+
 async def get_exercises_by_skill_id(skill_id:str, session:AsyncSession):
     sk = select(Skill).where(Skill.skill_uuid == skill_id)
     re = await session.execute(sk)
@@ -190,7 +248,6 @@ async def get_exercises_by_skill_id(skill_id:str, session:AsyncSession):
     ex = select(Exercise).where(Exercise.skill_id == skl.id)
     re = await session.execute(ex)
     all_exercises = re.scalars(re).all()
-
 
 
     all_questions:question.ResponseQuestionDto = []
@@ -219,7 +276,6 @@ async def get_exercises_by_skill_id(skill_id:str, session:AsyncSession):
                 correct_answer = qu.correct_answer,
                 choices= response_for_choices
             ))
-
 
     return payload.BaseResponse(
         date=date.today(),

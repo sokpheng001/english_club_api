@@ -17,6 +17,15 @@ from app.utils.verify import is_valid_uuid
 
 
 async def create_new_skill(sk:skill.CreateSkillDto, session=AsyncSession):
+
+    # verify that skill exists
+    sss = select(Skill).filter(Skill.skill_name==sk.skill_name).filter(Skill.skill_level==sk.skill_level)
+    re = await session.execute(sss)
+    result = re.scalars().all()
+    
+    if result:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Skill with name {sk.skill_name} and level {sk.skill_level} already exists")
+
     sk_uuid =str(uuid.uuid4())
 
     if sk.skill_level.upper() not in MyLevel.__members__:
@@ -35,13 +44,12 @@ async def create_new_skill(sk:skill.CreateSkillDto, session=AsyncSession):
             if result.skill_id:
                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"The exercise with uuid {ex_uuid_} has already been assigned to another skill")
             if result:
-                all_exercises_related_skil.append(exercise.RepsonseExerciseDto(
+                all_exercises_related_skil.append(exercise.RepsonseExerciseWithoutQuestionDto(
                     ex_uuid=result.ex_uuid,
                     title=result.title,
-                    thumbnail=result.thumbnail,
+                    thumbnail=result.thumbnail,  
                     description=result.description,
-                    exercise_level=result.exercise_level,
-                    questions=[]
+                    exercise_level=result.exercise_level
                 ))
             if not result: 
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Exercise not found")
@@ -69,14 +77,12 @@ async def create_new_skill(sk:skill.CreateSkillDto, session=AsyncSession):
     return payload.BaseResponse(
         date=date.today(),
         status=int(status.HTTP_200_OK),
-        payload=skill.ResponseSkillDto(
+        payload=skill.RepsonseSkillWithoutExerciseDto(
             skill_uuid=new_skill.skill_uuid,
             skill_name=new_skill.skill_name,
             thumbnail=new_skill.thumbnail,
             description=new_skill.description,
             skill_level=new_skill.skill_level,
-            is_deleted=new_skill.is_deleted,
-            exercises=all_exercises_related_skil
         ),
         message=f"Created new skill successfully",
     )
@@ -101,25 +107,21 @@ async def delete_skill_by_uuid(skill_uuid:str, session=AsyncSession):
         )
 
 async def get_all_skills_by_skill_name(name:str, session=AsyncSession):
-    query = select(Skill).filter(Skill.skill_name.ilike(f"%{name}%"))
+    query = select(Skill).filter(Skill.skill_name.ilike(f"%{name}%")).order_by(Skill.skill_level)
     result = await session.execute(query)
     skills = result.scalars().all()
     if not skills:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Skill not found")
     
-
-
     return payload.BaseResponse(
         date=date.today(),
         status=int(status.HTTP_200_OK),
-        payload=[skill.ResponseSkillDto(
+        payload=[skill.RepsonseSkillWithoutExerciseDto(
             skill_uuid=sk.skill_uuid,
             skill_name=sk.skill_name,
             thumbnail=sk.thumbnail,
             description=sk.description,
-            skill_level=sk.skill_level,
-            is_deleted=sk.is_deleted,
-            exercises=[]
+            skill_level=sk.skill_level
         )for sk in skills] ,
         message=f"Skills found",
     )
@@ -180,7 +182,7 @@ async def get_skill_by_name_and_level(name, level, session=AsyncSession):
 
 
 async def list_all_skills(session:AsyncSession):
-    query = select(Skill).where(Skill.is_deleted == False)
+    query = select(Skill).order_by(Skill.skill_level)
     re = await session.execute(query)
     skills = re.scalars().all()
     skls:skill.ResponseSkillDto = []

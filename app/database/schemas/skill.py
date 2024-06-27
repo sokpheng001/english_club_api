@@ -25,3 +25,10 @@ class ResponseSkillWithoutQuestionDto(BaseModel):
     description:str
     skill_level:str
     exercises:Optional[list[exercise.RepsonseExerciseWithoutQuestionDto]]
+
+class RepsonseSkillWithoutExerciseDto(BaseModel):
+    skill_uuid:Optional[str]
+    skill_name:str
+    thumbnail:Optional[str]=None
+    description:str
+    skill_level:str
