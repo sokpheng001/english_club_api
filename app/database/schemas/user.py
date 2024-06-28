@@ -4,7 +4,7 @@ from datetime import datetime
 
 
 class CreateUserDto(BaseModel):
-    user_name:str
+    username:str
     email: EmailStr
     password: str
 
