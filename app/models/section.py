@@ -1,5 +1,6 @@
 from app.database.database import Base
-from sqlalchemy import Column, Integer, String, Boolean,Date
+from sqlalchemy import Column, Integer, String, Boolean,Date, ForeignKey, JSON
+from sqlalchemy.orm import Relationship
 
 class Section(Base):
     __tablename__ = "sections"
@@ -9,7 +10,11 @@ class Section(Base):
     section_name = Column(String, nullable=False)
     thumbnail = Column(String, nullable=True)
     description = Column(String, nullable=True)
+    example = Column(JSON, nullable=True)
     section_level = Column(String, nullable=False)
+    # relationship
+    lesson_id = Column(Integer, ForeignKey("lesson_id"), nullable=True)
+    lesson = Relationship("Lesson", back_populates="sections")
 
     def __init__(self, section_uuid=None, section_name=None, thumbnail=None, description=None, section_level=None):
         self.section_uuid = section_uuid

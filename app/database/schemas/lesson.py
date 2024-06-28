@@ -1,10 +1,8 @@
 from typing import Optional
 from pydantic import BaseModel, EmailStr
 
-class CreateLessonDto():
-
+class CreateLessonDto(BaseModel):
     name:Optional[str]
     description:Optional[str]
     thumbnail: Optional[str]
-    lesson_level: Optional[str]
-    
+    sections_uuids: Optional[list[str]]

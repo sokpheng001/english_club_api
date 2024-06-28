@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, String, Boolean
-from database.database import Base
+from app.database.database import Base
+from sqlalchemy.orm import Relationship
 
 class Lesson(Base):
     __tablename__= "lessons"
@@ -10,11 +11,12 @@ class Lesson(Base):
     thumbnail = Column(String, nullable=True)
     lesson_level = Column(String, nullable=False)
     is_deleted = Column(Boolean, default=False)
+    sections = Relationship("Section",back_populates="lesson")
 
-    def __init__(self, name=None, description=None, thumbnail=None, lesson = None, is_deleted=False ):
+    def __init__(self, name=None, description=None, thumbnail=None, lesson_level = None, is_deleted=False ):
         self.name = name
         self.description = description
         self.thumbnail = thumbnail
-        self.lesson_level = lesson
+        self.lesson_level = lesson_level
         self.is_deleted = is_deleted
 

@@ -17,10 +17,10 @@ async def get_all_users(db:AsyncSession=Depends(get_db)):
     users = await get_list_all_users(db)
     return users
 
-@user_router.post("/users/", response_model=BaseResponse)
-async def add_new_user(user: CreateUserDto,db: AsyncSession=Depends(get_db)):
-    new_user = await create_user(user,db)
-    return new_user
+# @user_router.post("/users/", response_model=BaseResponse)
+# async def add_new_user(user: CreateUserDto,db: AsyncSession=Depends(get_db)):
+#     new_user = await create_user(user,db)
+#     return new_user
 
 @user_router.get("/users/{id}",response_model=BaseResponse)
 async def find_user(id:str,db:AsyncSession=Depends(get_db)):
