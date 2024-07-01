@@ -7,6 +7,7 @@ class CreateUserDto(BaseModel):
     username:str
     email: EmailStr
     password: str
+    confirm_password: str
 
 class LoginUserDto(BaseModel):
     email: EmailStr
@@ -16,8 +17,6 @@ class UpdateUserDto(BaseModel):
     user_name:Optional[str] = None
     email: Optional[EmailStr] = None
     password: Optional[str] = None
-    profile:  Optional[str] = None
-    updated_date: datetime = None
     bio: Optional[str] = None
     
 class RepsonseUserDto(BaseModel):

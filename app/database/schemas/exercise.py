@@ -2,7 +2,7 @@
 from pydantic import BaseModel
 from typing import List, Optional
 from app.database.schemas import question
-from app.database.schemas.english_level_template import Level
+
 
 
 class CreateExerciseDto(BaseModel):

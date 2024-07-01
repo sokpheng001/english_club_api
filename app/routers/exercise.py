@@ -9,10 +9,9 @@ exercise_router = APIRouter()
 
 
 @exercise_router.post("/exercises")
-async def add_new_exercise(ex:CreateExerciseDto, current_user= Depends(get_current_user),db:AsyncSession=Depends(get_db)):
-    email = current_user
-    print(f"This is {email}")
-    # return await create_exercise(ex, db)
+async def add_new_exercise(ex:CreateExerciseDto,db:AsyncSession=Depends(get_db)):
+    
+    return await create_exercise(ex, db)
 
 @exercise_router.get("/exercises")
 async def get_all_exercises(db:AsyncSession=Depends(get_db)):

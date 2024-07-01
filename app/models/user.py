@@ -14,6 +14,7 @@ class User(Base):
     updated_date = Column(Date, nullable=True)
     bio = Column(String(255),nullable=True)
     is_deleted = Column(Boolean, default=False)
+    is_verified = Column(Boolean, default=False)
     
     def __init__(self, uuid=None, user_name=None, email=None, password=None, created_date=None, updated_date=None):
         self.uuid = uuid

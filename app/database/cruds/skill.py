@@ -4,7 +4,7 @@ from sqlalchemy.future import select
 from app.database.database import Base
 import uuid
 from fastapi import HTTPException, status
-from sqlalchemy import exc
+
 from app.models.skill import Skill
 from app.models.exercise import Exercise
 from app.models.question import Question
@@ -44,7 +44,6 @@ async def create_new_skill(sk:skill.CreateSkillDto, session=AsyncSession):
         #raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Skill with name {sk.skill_name} and level {sk.skill_level} already exists")
 
     sk_uuid =str(uuid.uuid4())
-
     if sk.skill_level.upper() not in MyLevel.__members__:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Skill level should be one of A1 to C2, but you given {sk.skill_level}")
     if sk.skill_name.upper() not in sname.__members__:
@@ -127,6 +126,8 @@ async def delete_skill_by_uuid(skill_uuid:str, session=AsyncSession):
         )
 
 async def get_all_skills_by_skill_name(name:str, session=AsyncSession):
+    if name.upper() not in sname.__members__:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Skill name should be one of READING, WRITING or LISTENING, but you given {name}")
     query = select(Skill).filter(Skill.skill_name.ilike(f"{name}")).order_by(Skill.skill_level)
     result = await session.execute(query)
     skills = result.scalars().all()
@@ -178,7 +179,8 @@ async def get_skill_by_name_and_level(name, level, session=AsyncSession):
                     thumbnail=ex.thumbnail,
                     description=ex.description,
                     skill_uuid=None,
-                    exercise_level= ex.exercise_level
+                    exercise_level= ex.exercise_level,
+                    tip=ex.tip
                 ))
 
         skls.append(skill.ResponseSkillWithoutQuestionDto(
@@ -248,7 +250,8 @@ async def list_all_skills(session:AsyncSession):
                     description=ex.description,
                     skill_uuid=None,
                     questions=all_questions,
-                    exercise_level= ex.exercise_level
+                    exercise_level= ex.exercise_level,
+                    tip=ex.tip
                 ))
                 all_questions = [] # clear all questions
 

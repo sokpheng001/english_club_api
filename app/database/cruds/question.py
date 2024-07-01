@@ -11,6 +11,7 @@ from app.models.exercise import Exercise
 from app.utils.verify import is_valid_uuid
 from app.database.schemas.english_level import MyLevel
 
+
 async def add_question(q:question.CreateQuestionDto, session:AsyncSession):
     
     if q.question_level.upper() not in MyLevel.__members__:
@@ -19,7 +20,7 @@ async def add_question(q:question.CreateQuestionDto, session:AsyncSession):
 
     try:
         question_uuid = str(uuid.uuid4())
-        new_question =  Question(question_uuid,q.question_text, q.voice, q.video, q.image,q.type,correct_answer, question_level=q.question_level.upper())
+        new_question =  Question(str(question_uuid),q.question_text, q.voice, q.video, q.image,q.type,correct_answer, question_level=q.question_level.upper())
         
         session.add(new_question)
         await session.commit()

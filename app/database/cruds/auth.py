@@ -6,7 +6,8 @@ from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from app.models.user import User
-from fastapi.security.oauth2 import OAuth2PasswordBearer
+from app.database.schemas import user as ur
+from fastapi.security import OAuth2PasswordBearer
 from app.database.schemas.token import TokenData
 
 from fastapi import Depends, HTTPException, status,Header
@@ -15,8 +16,9 @@ import jwt
 
 SECRET_KEY = "fc5af23b3d9b9e0cd45773cd2f08263f440df72def83b0356a6626fe611d3b2b"
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
-oauth2_scheme =  OAuth2PasswordBearer(tokenUrl="/login")
+ACCESS_TOKEN_EXPIRE_MINUTES = 15
+REFRESH_TOKEN_EXPIRE_MINUTES = 30
+oauth2_scheme =  OAuth2PasswordBearer(tokenUrl="" )
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 async def get_user_by_email(db: AsyncSession, email: str):
@@ -41,6 +43,17 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
+def create_refresh_token(data: dict, expires_delta: timedelta = None):
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.utcnow() + expires_delta
+    else:
+        expire = datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_MINUTES)
+    to_encode.update({"expire": expire.isoformat(), "type": "refresh"})
+    encoded_token = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_token
+
+
 async def authenticate_user(db: AsyncSession, email: str, password: str):
     user = await get_user_by_email(db, email)
     if not user:
@@ -51,10 +64,11 @@ async def authenticate_user(db: AsyncSession, email: str, password: str):
 
 
 async def get_current_user(token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)):
+    print(token)
     credentials_exception = HTTPException(
         status_code=401,
         detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer "},
+        headers={"WWW-Authenticate": "Bearer"},
     )
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
@@ -74,4 +88,13 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: AsyncSession
     user = await get_user_by_email(db, email=token_data.email)
     if user is None:
         raise HTTPException(status_code=401, detail="User not found")
-    return user
+    return ur.RepsonseUserDto(
+        user_uuid = user.uuid,
+        user_name = user.user_name,
+        email = user.email,
+        profile=user.profile,
+        created_date= user.created_date,
+        updated_date = user.updated_date,
+        is_deleted=user.is_deleted,
+        bio=user.bio
+    )

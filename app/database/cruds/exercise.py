@@ -27,79 +27,71 @@ async def create_exercise(ex:CreateExerciseDto, session:AsyncSession):
     
     # if ex.exercise_level.upper() not in MyLevel.__members__:
     #     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Exercise level should be one of A1 to C2, but you given {ex.exercise_level}")
-    try:
-        # fetch question for the exercise
-        # check if uuid of question is valid
-        for quuid in ex.q_uuids:
-            if not is_valid_uuid(quuid):
-                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid question UUID 😏")
-        if len(ex.q_uuids) > 1:
-            if all(x==ex.q_uuids[0] for x in ex.q_uuids):
-                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Question UUIDs are same 😏")
-
-        list_of_questions:question.ResponseQuestionDto = []
-        for qid in ex.q_uuids:
-
-            qq = select(Question).filter(Question.q_uuid == qid)
-            req = await session.execute(qq)
-            q = req.scalars().first()
-            #check if the question is already assigned to the exercise
-            if not q:
-                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Question {qid} is not found 😶‍🌫️")
-            if q.exercise_id:
-                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Question {q.q_uuid} is already assigned to the exercise 😶‍🌫️")
-            # get all  choices for the each question
-            ch = select(Choice).where(Choice.question_id == q.id)
-            req = await session.execute(ch)
-            all_choices_for_each_question = req.scalars().all()
-            response_for_choices:choice.ResponseChoiceDto = []
-            for cho in all_choices_for_each_question:
-                response_for_choices.append(choice.ResponseChoiceDto(
-                    choice_uuid=cho.choice_uuid,
-                    text=cho.choice_text,
-                    is_correct=cho.is_correct
-                ))
-            list_of_questions.append(question.ResponseQuestionDto(
-                q_uuid= q.q_uuid,
-                question_text = q.text,
-                voice= q.voice,
-                video= q.video,
-                type= q.type,
-
-                question_level=q.question_level,
-                correct_answer= q.correct_answer,
-                choices=response_for_choices
+    # fetch question for the exercise
+    # check if uuid of question is valid
+    for quuid in ex.q_uuids:
+        if not is_valid_uuid(quuid):
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid question UUID 😏")
+    if len(ex.q_uuids) > 1:
+        if all(x==ex.q_uuids[0] for x in ex.q_uuids):
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Question UUIDs are same 😏")
+    list_of_questions:question.ResponseQuestionDto = []
+    for qid in ex.q_uuids:
+        qq = select(Question).filter(Question.q_uuid == qid)
+        req = await session.execute(qq)
+        q = req.scalars().first()
+        #check if the question is already assigned to the exercise
+        if not q:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Question {qid} is not found 😶‍🌫️")
+        if q.exercise_id:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Question {q.q_uuid} is already assigned to the exercise 😶‍🌫️")
+        # get all  choices for the each question
+        ch = select(Choice).where(Choice.question_id == q.id)
+        req = await session.execute(ch)
+        all_choices_for_each_question = req.scalars().all()
+        response_for_choices:choice.ResponseChoiceDto = []
+        for cho in all_choices_for_each_question:
+            response_for_choices.append(choice.ResponseChoiceDto(
+                choice_uuid=cho.choice_uuid,
+                text=cho.choice_text,
+                is_correct=cho.is_correct
             ))
-        # check if all questions have different levels
-        if len(list_of_questions) >1:
-            for qq in list_of_questions:
-                if qq.question_level != list_of_questions[0].question_level:
-                    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"All questions must be in the same level 😉, please check question before input.")
-
-        
-        #create a question
-        exercise_uuid =str(uuid.uuid4()) # generate unique identifier for the exercise
-        new_exercise  = None
-        new_exercise =  Exercise(exercise_uuid, ex.title,ex.thumbnail,
-                                     ex.description,
-                                     tip = ex.tip,
-                                     exercise_level=q.question_level,
-                                     )
-        session.add(new_exercise) # add to database
-        await session.commit()
-        await session.refresh(new_exercise)
-        # update exercise id in question
-        for qid in ex.q_uuids:
-            qq = select(Question).filter(Question.q_uuid == qid)
-            req = await session.execute(qq)
-            q = req.scalars().first()
-            if q:
-                if not q.exercise_id:
-                    q.exercise_id = new_exercise.id
-                    await session.commit()
-                    await session.refresh(q)
-    except Exception as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"{e}")
+        list_of_questions.append(question.ResponseQuestionDto(
+            q_uuid= q.q_uuid,
+            question_text = q.text,
+            voice= q.voice,
+            video= q.video,
+            type= q.type,
+            question_level=q.question_level,
+            correct_answer= q.correct_answer,
+            choices=response_for_choices
+        ))
+    # check if all questions have different levels
+    if len(list_of_questions) >1:
+        for qq in list_of_questions:
+            if qq.question_level != list_of_questions[0].question_level:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"All questions must be in the same level 😉, please check question before input.")
+    #create a question
+    exercise_uuid =str(uuid.uuid4()) # generate unique identifier for the exercise
+    new_exercise  = None
+    new_exercise =  Exercise(exercise_uuid, ex.title,ex.thumbnail,
+                                 ex.description,
+                                 tip = ex.tip,
+                                 exercise_level=q.question_level,
+                                 )
+    session.add(new_exercise) # add to database
+    await session.commit()
+    await session.refresh(new_exercise)
+    # update exercise id in question
+    for qid in ex.q_uuids:
+        qq = select(Question).filter(Question.q_uuid == qid)
+        req = await session.execute(qq)
+        q = req.scalars().first()
+        if q:
+            if not q.exercise_id:
+                q.exercise_id = new_exercise.id
+                await session.commit()
+                await session.refresh(q)
     return payload.BaseResponse(
         date=date.today(),
         status=int(status.HTTP_200_OK),
