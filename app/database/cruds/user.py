@@ -95,13 +95,14 @@ async def delete_user_by_uuid(id:str, session:AsyncSession):
 async def update_user_by_uuid(id:str, user_update: UpdateUserDto ,session:AsyncSession):
     if not is_valid_uuid(id):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid user uuid 🤔")
-    user:User = select(User).filter(User.uuid == id)
+    user = select(User).filter(User.uuid == id)
     result = await session.execute(user)
     u:User = result.scalars().first()
-    u.updated_date = date.today()# set updated date
 
     if not u:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User is not found")
+    
+    u.updated_date = date.today() # set updated date
 
     update_data = user_update.dict(exclude_unset=True)  # Exclude fields that were not set
     for key, value in update_data.items():

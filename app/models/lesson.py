@@ -5,6 +5,7 @@ from app.models.section import Section
 from app.models.vocabulary import Vocabulary
 from app.models.grammar import Grammar
 
+
 class Lesson(Base):
     __tablename__= "lessons"
     
@@ -17,6 +18,7 @@ class Lesson(Base):
     is_deleted = Column(Boolean, default=False)
     # relationship
     sections = relationship("Section",back_populates="lesson")
+    exercises = relationship("Exercise",back_populates="lesson")
     
     grammar_id = Column(Integer, ForeignKey("grammars.id"))
     grammar = relationship("Grammar", back_populates="lessons")

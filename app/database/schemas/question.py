@@ -9,7 +9,7 @@ class CreateQuestionDto(BaseModel):
     voice: Optional[str] = None
     video: Optional[str] = None
     image: Optional[str] = None
-    type: Optional[str] # e.g., "multiple-choice", "fill-in-the-blank", "true-false"
+    type: Optional[str] = "Multiple choices" # e.g., "multiple-choice", "fill-in-the-blank", "true-false"
     question_level: Optional[str] = "A1"
     correct_answer: Optional[list[Answer]] 
     choices: Optional[list[choice.CreateChoiceDto]]

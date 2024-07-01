@@ -11,12 +11,12 @@ user_dependency = Annotated[dict,Depends(get_current_user)] # to get security
 lesson_router = APIRouter()
 
 
-@lesson_router.post("/lessons/")
-async def add_new_lesson(lesson:CreateLessonDto,db:AsyncSession=Depends(get_db)):
+@lesson_router.post("/lessons/is-include-exercises={answer}")
+async def add_new_lesson(answer:bool,lesson:CreateLessonDto,db:AsyncSession=Depends(get_db)):
     return payload.BaseResponse(
             date=date.today(),
             status=int(status.HTTP_201_CREATED),
-            payload=await create_new_lessons(lesson, db),
+            payload=await create_new_lessons(an,lesson, db),
             message="Creates a new Lesson successfully"
         )
 @lesson_router.get("/lessons/")

@@ -228,11 +228,7 @@ async def find_exercise_by_uuid(id:str, session=AsyncSession):
                 choices= response_for_choices,
                 question_level=q.question_level
             ))
-
-    return payload.BaseResponse(
-        date=date.today(),
-        status=int(status.HTTP_200_OK),
-        payload= RepsonseExerciseDto(
+    return RepsonseExerciseDto(
             ex_uuid =ex.ex_uuid,
             title=ex.title,
             thumbnail=ex.thumbnail,
@@ -241,9 +237,8 @@ async def find_exercise_by_uuid(id:str, session=AsyncSession):
             # skill_uuid = str(None if ex.skill_id==None else ex.skill_id),
             questions=all_questions,
             exercise_level= ex.exercise_level
-        ),
-        message="List all exercises"
-    )
+        )
+
 
 
 async def get_exercises_by_skill_id(skill_id:str, session:AsyncSession):

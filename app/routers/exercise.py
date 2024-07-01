@@ -1,9 +1,11 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, status
 from app.database.schemas.exercise import CreateExerciseDto
 from app.database.database import engine, get_db
 from app.database.schemas.token import UserInDB
 from app.database.cruds.auth import get_current_user
 from sqlalchemy.ext.asyncio import AsyncSession
+from app.database.schemas import payload
+from datetime import date
 from app.database.cruds.exercise import  create_exercise,list_all_exercises,get_exercises_by_skill_id, delete_exercise_by_uuid, find_exercise_by_uuid
 exercise_router = APIRouter()
 
@@ -28,4 +30,9 @@ async def delete_exercise(id:str, db:AsyncSession=Depends(get_db)):
 
 @exercise_router.get("/exercises/{id}")
 async def get_exercise_by_id(id:str, db:AsyncSession=Depends(get_db)):
-    return await find_exercise_by_uuid(id, db)
+        return payload.BaseResponse(
+        date=date.today(),
+        status=int(status.HTTP_200_OK),
+        payload= await find_exercise_by_uuid(id, db),
+        message="Exercises Found"
+    )

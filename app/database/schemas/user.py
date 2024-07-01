@@ -15,8 +15,7 @@ class LoginUserDto(BaseModel):
 
 class UpdateUserDto(BaseModel):
     user_name:Optional[str] = None
-    email: Optional[EmailStr] = None
-    password: Optional[str] = None
+    profile:  Optional[str] = None
     bio: Optional[str] = None
     
 class RepsonseUserDto(BaseModel):

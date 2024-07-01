@@ -17,6 +17,9 @@ class Exercise(Base):
     skill_id = Column(Integer, ForeignKey("skills.id"), nullable=True)
     skill = relationship("Skill",back_populates="exercises")
     questions = relationship("Question",back_populates="exercise")
+    # 
+    lesson_id = Column(Integer, ForeignKey("lessons.id"), nullable=True)
+    lesson = relationship("Lesson",back_populates="exercises")
 
     def __init__(self,uuid ,title=None, thumbnail=None, description=None,tip=None, skill_id=None, exercise_level=None):
         self.ex_uuid = uuid
