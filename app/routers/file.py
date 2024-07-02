@@ -1,22 +1,21 @@
-from fastapi import APIRouter, HTTPException, Depends,UploadFile,File
-from fastapi.responses import FileResponse
+from fastapi import APIRouter,UploadFile,File, status
 import os
 from app.database.cruds.file import upload_multiple_files
 from app.database.schemas import payload
-import mimetypes
+from datetime import date
+from dotenv import load_dotenv
+
 
 file_router = APIRouter()
 
-@file_router.post("/files/upload")
-async def upload_files(files:list[UploadFile]=File(...)):
-    return await upload_multiple_files(files)
 
-@file_router.get("/files/{filename}")
-async def get_file(filename: str):
-    file_path = os.path.join("./uploads/", filename)
-    if not os.path.exists(file_path):
-        return {"error": "File not found"}
-    content_type = mimetypes.guess_type(file_path)
-    if content_type is None:
-        content_type = 'application/octet-stream'
-    return FileResponse(path=file_path, media_type=content_type)
+
+@file_router.post("/files")
+async def upload_files(files:list[UploadFile]=File(...)):
+    return payload.BaseResponse(
+        date=date.today(),
+        status=status.HTTP_200_OK,
+        payload=await upload_multiple_files(files),
+        message="Files uploaded successfully 😉"
+    )
+

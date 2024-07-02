@@ -2,12 +2,16 @@ from fastapi import FastAPI
 from app.routers import user, lesson, exercise, question, skill, file, auth, section,grammer, vocabulary
 from fastapi.staticfiles import StaticFiles
 from app.database.database import Base, engine
+import os
 
 app = FastAPI()
 
 
-# 
-app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+
+
+# mount file for preview
+app.mount("/files", StaticFiles(directory="uploads"), name="uploads")
+
 # Include routers
 app.include_router(auth.auth_router)
 app.include_router(file.file_router)
@@ -19,7 +23,6 @@ app.include_router(section.section_router)
 app.include_router(lesson.lesson_router)
 app.include_router(grammer.grammar_router)
 app.include_router(vocabulary.vocabulary_router)
-
 
 
 # Function to create tables if they do not exist
@@ -38,4 +41,5 @@ async def startup():
 
 import uvicorn
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="127.0.0.1", port=4000, reload=True)
+
+    uvicorn.run("main:app", host="127.0.0.1", port=50005, reload=True)
