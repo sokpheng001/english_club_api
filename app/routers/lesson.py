@@ -16,7 +16,7 @@ async def add_new_lesson(answer:bool,lesson:CreateLessonDto,db:AsyncSession=Depe
     return payload.BaseResponse(
             date=date.today(),
             status=int(status.HTTP_201_CREATED),
-            payload=await create_new_lessons(an,lesson, db),
+            payload=await create_new_lessons(answer,lesson, db),
             message="Creates a new Lesson successfully"
         )
 @lesson_router.get("/lessons/")

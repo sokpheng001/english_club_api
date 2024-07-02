@@ -4,7 +4,7 @@ from fastapi import HTTPException, status, File,UploadFile
 from datetime import date
 import os
 import uuid
-UPLOAD_DIRECTORY = "./uploads/"
+UPLOAD_DIRECTORY = "static/uploads"
 
 if not os.path.exists(UPLOAD_DIRECTORY):
     os.makedirs(UPLOAD_DIRECTORY)
@@ -18,7 +18,7 @@ async def upload_multiple_files(files:list[UploadFile]=File(...)):
 
         with open(file_location,"wb") as f:
             f.write(await file.read())
-        file_url = f"/upload/{unique_filename}"
+        file_url = f"static/upload/{unique_filename}"
         file_urls.append(file_url)
         
     return {"file_urls": file_urls}
