@@ -11,7 +11,7 @@ app = FastAPI()
 
 
 # mount file for preview
-app.mount("/files", StaticFiles(directory="uploads"), name="uploads")
+app.mount("/files", StaticFiles(directory="/uploads"), name="uploads")
 
 # # 
 # app.mount("/static", StaticFiles(directory="static"), name="static")
