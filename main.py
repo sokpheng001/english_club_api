@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from app.routers import user, lesson, exercise, question, skill, file, auth, section,grammer, vocabulary
 from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 from app.database.database import Base, engine
 import os
 
@@ -12,6 +13,8 @@ app = FastAPI()
 # mount file for preview
 app.mount("/files", StaticFiles(directory="uploads"), name="uploads")
 
+# # 
+# app.mount("/static", StaticFiles(directory="static"), name="static")
 # Include routers
 app.include_router(auth.auth_router)
 app.include_router(file.file_router)
@@ -24,6 +27,13 @@ app.include_router(lesson.lesson_router)
 app.include_router(grammer.grammar_router)
 app.include_router(vocabulary.vocabulary_router)
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Function to create tables if they do not exist
 async def create_tables_if_not_exists():
