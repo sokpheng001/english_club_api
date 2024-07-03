@@ -8,6 +8,7 @@ import uuid
 
 
 file_server = "http://localhost:50005/files"
+file_server1 = "http://136.228.158.126:50005/files"
 
 UPLOAD_DIRECTORY = "/uploads/"
 
@@ -24,7 +25,7 @@ async def upload_multiple_files(files:list[UploadFile]=File(...)):
             f.write(await file.read())
         file_urls.append(FileResponse(
             file_name=unique_filename,
-            file_path=f"{file_server}/{unique_filename}",
+            file_path=f"{file_server1}/{unique_filename}",
             file_size=file.size,
         ))
         

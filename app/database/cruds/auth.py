@@ -35,6 +35,8 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 templates = Jinja2Templates(directory="app/templates")
 sender_email = "kimchansokpheng123@gmail.com"
 sender_password = "mpqy wwdh oszi csaw"
+email_server = "http://localhost:50005"
+email_server1 = "http://136.228.158.126:50005"
 
 
 async def reset_new_password(new_pass: CreateNewPasswordDto, session:AsyncSession):
@@ -143,7 +145,7 @@ async def send_verification_email(email:str, token:str):
        # Set up the Jinja2 environment for HTML email template
     env = Environment(loader=FileSystemLoader('app/templates'))
     template = env.get_template('verify_email.html')
-    verification_link = f"http://localhost:50005/verify-email/?token={token}"
+    verification_link = f"{email_server1}/verify-email/?token={token}"
     html_content = template.render(verification_link=verification_link)
     message = MIMEMultipart("alternative")
     message["Subject"] = "Email Verification"
