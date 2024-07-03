@@ -3,7 +3,7 @@ import os
 from app.database.cruds.file import upload_multiple_files
 from app.database.schemas import payload
 from datetime import date
-from dotenv import load_dotenv
+
 
 
 file_router = APIRouter()

@@ -15,6 +15,7 @@ class User(Base):
     bio = Column(String(255),nullable=True)
     is_deleted = Column(Boolean, default=False)
     is_verified = Column(Boolean, default=False)
+    verification_token = Column(String, nullable=True)
     
     def __init__(self, uuid=None, user_name=None, email=None, password=None, created_date=None, updated_date=None):
         self.uuid = uuid

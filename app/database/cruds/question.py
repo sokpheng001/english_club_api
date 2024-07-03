@@ -10,10 +10,13 @@ from app.models.choice import Choice
 from app.models.exercise import Exercise
 from app.utils.verify import is_valid_uuid
 from app.database.schemas.english_level import MyLevel
+from app.database.schemas.question_type import QuestionType
 
 
 async def add_question(q:question.CreateQuestionDto, session:AsyncSession):
-    
+
+    if q.type.upper() not in QuestionType.__members__:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Type should be one of 'TRUE_OR_FALSE', 'MULTIPLE_CHOICES', 'FILL_IN_THE_BLANK', but you given {q.type}")
     if q.question_level.upper() not in MyLevel.__members__:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Level should be one of A1 to C2, but you given {q.question_level}")
     correct_answer = [ans.dict() for ans in q.correct_answer]
