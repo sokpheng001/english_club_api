@@ -163,8 +163,6 @@ async def get_user_by_email(db: AsyncSession, email: str):
     async with db.begin():
         result = await db.execute(select(User).filter(User.email == email))
         us = result.scalars().first()
-        if not us:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User is not found")
         return us
 
 def verify_password(plain_password, hashed_password):

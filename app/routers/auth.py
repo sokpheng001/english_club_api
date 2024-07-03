@@ -48,7 +48,9 @@ async def read_users_me(tok: token.TokenForVerifyMe , db: AsyncSession = Depends
     )
 @auth_router.post("/register", status_code=status.HTTP_201_CREATED)
 async def register_user(create_user: CreateUserDto, db: AsyncSession = Depends(get_db)):
+
     new_user = await register_new_user(create_user, db)
+
     # sending email notification
     await send_verification_email(new_user.email, new_user.verification_token)
     # 
