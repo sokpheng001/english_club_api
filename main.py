@@ -44,13 +44,18 @@ async def create_tables_if_not_exists():
 async def startup_event():
     await create_tables_if_not_exists()
 
+
+from config import settings
+
 # Create tables during application startup if they don't exist
 @app.on_event("startup")
 async def startup():
+
+    print(f"HOST: {settings.HOST}")
     await startup_event()
 
 import uvicorn
 from datetime import datetime
 if __name__ == "__main__":
     
-    uvicorn.run("main:app", host="127.0.0.1", port=50005, reload=True)
+    uvicorn.run("main:app", host=f"{settings.HOST}", port=int(settings.PORT), reload=True)

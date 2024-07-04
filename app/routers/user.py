@@ -48,7 +48,7 @@ async def delete_user(id:str, db:AsyncSession=Depends(get_db)):
         date=date.today(),
         status=status.HTTP_200_OK,
         payload=re,
-        message="User deleted successfully 🤔"  
+        message="User deleted successfully 😎"  
     )
 
 @user_router.put("/users/{id}",response_model=BaseResponse)

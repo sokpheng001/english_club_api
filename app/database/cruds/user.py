@@ -81,6 +81,8 @@ async def find_user_by_uuid(id:str,session: AsyncSession):
         )
 
 async def delete_user_by_uuid(id:str, session:AsyncSession):
+    if not is_valid_uuid(id):
+         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid user uuid 🤔")
     query = select(User).filter(User.uuid == id)
     result = await session.execute(query)
     u = result.scalars().first()

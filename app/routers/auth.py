@@ -72,13 +72,18 @@ async def reset_password(email:EmailStr = Query(None, max_length=50), db:AsyncSe
     return payload.BaseResponse(
         date=date.today(),
         status=status.HTTP_200_OK,
-        payload="The verification code was sent to your email, Please check your email",
+        payload="The verification code was sent, Please check your email",
         message="Email sent successfully"
     )
 
 @auth_router.post("/request/reset-password/otp-verify")
 async def otp_verify(votp:CreateVerifyOTPDto, db:AsyncSession=Depends(get_db)):
-    return await verify_otp(email=votp.email, otp=votp.otp,session=db)
+    return payload.BaseResponse(
+        date=date.today(),
+        status=status.HTTP_200_OK,
+        payload=await verify_otp(email=votp.email, otp=votp.otp,session=db),
+        message= "OTP verified successfully"
+    )
 @auth_router.post("/reset-password")
 async def reset_user_new_password(new_pass:CreateNewPasswordDto, db:AsyncSession=Depends(get_db)):
     result = await reset_new_password(new_pass, db)

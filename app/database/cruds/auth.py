@@ -23,6 +23,7 @@ import uuid
 from app.models.otp import OTPModel
 from fastapi import Request
 from app.utils.otp import generate_otp
+from config import settings
 
 from itsdangerous import URLSafeTimedSerializer
 
@@ -145,7 +146,8 @@ async def send_verification_email(email:str, token:str):
        # Set up the Jinja2 environment for HTML email template
     env = Environment(loader=FileSystemLoader('app/templates'))
     template = env.get_template('verify_email.html')
-    verification_link = f"{email_server1}/verify-email/?token={token}"
+    verification_link = f"http://{settings.HOST}{':'}{settings.PORT}/verify-email/?token={token}"
+    print(verification_link)
     html_content = template.render(verification_link=verification_link)
     message = MIMEMultipart("alternative")
     message["Subject"] = "Email Verification"
