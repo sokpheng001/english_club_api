@@ -84,7 +84,6 @@ async def verify_email_for_user(request:Request,token:str, db:AsyncSession):
     return templates.TemplateResponse("notification.html", {"request": request, "message": "User has been verified"})
 
 
-
 def generate_verification_token(email, secret_key):
     serializer = URLSafeTimedSerializer(secret_key)
     return serializer.dumps(email, salt='email-confirmation-salt')
@@ -240,7 +239,6 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: AsyncSession
         is_deleted=user.is_deleted,
         bio=user.bio
     )
-
 
 async def register_new_user(create_user:CreateUserDto, db:AsyncSession):
     if create_user.password !=create_user.confirm_password:

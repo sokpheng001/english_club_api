@@ -5,6 +5,7 @@ from app.database.cruds.skill import create_new_skill, list_all_skills, get_all_
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Annotated
 from app.database.cruds.auth import get_current_user
+
 user_dependency = Annotated[dict,Depends(get_current_user)]
 skill_router = APIRouter()
 

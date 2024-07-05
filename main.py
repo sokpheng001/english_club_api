@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.routers import user, lesson, exercise, question, skill, file, auth, section,grammer, vocabulary
+from app.routers import user, lesson, exercise, question, skill, file, auth, section,grammer, vocabulary, submit_answer
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from app.database.database import Base, engine
@@ -26,6 +26,7 @@ app.include_router(section.section_router, tags=["Section"])
 app.include_router(lesson.lesson_router,tags=["Lesson"])
 app.include_router(grammer.grammar_router,tags=["Grammar"])
 app.include_router(vocabulary.vocabulary_router,tags=["Vocabulary"])
+app.include_router(submit_answer.submit_answer_router, tags=["Submit Answer"])
 
 app.add_middleware(
     CORSMiddleware,
@@ -50,7 +51,6 @@ from config import settings
 # Create tables during application startup if they don't exist
 @app.on_event("startup")
 async def startup():
-
     print(f"HOST: {settings.HOST}")
     await startup_event()
 

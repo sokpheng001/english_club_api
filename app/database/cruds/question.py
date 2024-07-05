@@ -59,7 +59,6 @@ async def add_question(q:question.CreateQuestionDto, session:AsyncSession):
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
     
 
-
 async def get_question_by_level(level:str, session=AsyncSession):
     if level.upper() not in MyLevel.__members__:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Level should be one of A1 to C2, but you given {level}")
