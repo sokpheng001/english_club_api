@@ -1,8 +1,8 @@
 
-from fastapi import APIRouter, HTTPException, Depends, status
+from fastapi import APIRouter, Depends, status
 from app.database.schemas.payload import BaseResponse
-from app.database.schemas.user import CreateUserDto, UpdateUserDto
-from app.database.cruds.user import create_user, find_user_by_uuid, delete_user_by_uuid, get_list_all_users, update_user_by_uuid
+from app.database.schemas.user import  UpdateUserDto
+from app.database.cruds.user import find_user_by_uuid, delete_user_by_uuid, get_list_all_users, update_user_by_uuid
 from app.database.database import engine, get_db
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database.schemas import payload

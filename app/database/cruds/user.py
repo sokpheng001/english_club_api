@@ -15,7 +15,7 @@ from app.utils.verify import is_valid_uuid
 
 
 async def get_list_all_users(session:AsyncSession):
-     query = select(User).where(User.is_deleted == False)
+     query = select(User).where(User.is_deleted == False).order_by(User.created_date.desc())
      result = await session.execute(query)
      users = result.scalars().all()
      users_repsonse:RepsonseUserDto = []

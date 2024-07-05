@@ -2,6 +2,7 @@ from sqlalchemy import Column, ForeignKey, Integer, String, Boolean,Date,JSON
 from app.database.database import Base
 from sqlalchemy.orm import relationship
 from app.models.skill import Skill
+from app.models.exercise_complete import ExerciseComplete
 
 class Exercise(Base):
     __tablename__ = "exercises"
@@ -20,6 +21,8 @@ class Exercise(Base):
     # 
     lesson_id = Column(Integer, ForeignKey("lessons.id"), nullable=True)
     lesson = relationship("Lesson",back_populates="exercises")
+    # 
+    exercise_completes = relationship("ExerciseComplete",back_populates="exercise")
 
     def __init__(self,uuid ,title=None, thumbnail=None, description=None,tip=None, skill_id=None, exercise_level=None):
         self.ex_uuid = uuid

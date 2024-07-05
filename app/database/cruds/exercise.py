@@ -189,7 +189,7 @@ async def list_all_exercises(session:AsyncSession):
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
     
 
-async def find_exercise_by_uuid(id:str, session=AsyncSession):
+async def find_exercise_by_uuid(id:str, session=AsyncSession)->RepsonseExerciseDto:
     if not is_valid_uuid(id):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid exercise uuid {id} 😏")
     que = select(Exercise).where(Exercise.ex_uuid ==id)
