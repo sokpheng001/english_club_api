@@ -200,14 +200,16 @@ async def answer_submission(exercise_uuid:str,answer:submit_answer.SubmitAnswerD
         await session.commit()
     return ResponseExerciseCompleteDto(
         user_uuid=answer.user_uuid,
-        complete_date=datetime.utcnow(),
+        # complete_date=datetime.utcnow(),
         ex_level=ex.exercise_level,
         exercises= ExerciseCompleteDto(
             ex_uuid=ex.ex_uuid,
             ex_title=ex.title,
             ex_level=ex.exercise_level,
             ex_description=ex.description,
-            ex_thumbnail=ex.thumbnail
-        ),
-        scores=(user_score)
+            ex_thumbnail=ex.thumbnail,
+            scores=(user_score),
+            complete_date=datetime.utcnow()
+        )
+        # scores=(user_score)
     )

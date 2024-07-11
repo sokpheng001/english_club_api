@@ -18,6 +18,4 @@ class NewResponseCompleteExerciseDto(ExerciseCompleteDto):
 
 class ResponseExerciseCompleteDto(BaseModel):
     user_uuid: str
-    complete_date: datetime
     exercises: ExerciseCompleteDto
-    scores:  Decimal
