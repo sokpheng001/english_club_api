@@ -13,6 +13,9 @@ class Exercise(Base):
     thumbnail = Column(String, nullable=True)
     description = Column(String, nullable=True)
     tip = Column(String, nullable=True)
+    reading_text = Column(String, nullable=True)
+    voice = Column(String, nullable=True)
+    transcript = Column(String, nullable=True)
     exercise_level = Column(String, nullable=False)
     #
     skill_id = Column(Integer, ForeignKey("skills.id"), nullable=True)
@@ -24,7 +27,7 @@ class Exercise(Base):
     # 
     exercise_completes = relationship("ExerciseComplete",back_populates="exercise")
 
-    def __init__(self,uuid ,title=None, thumbnail=None, description=None,tip=None, skill_id=None, exercise_level=None):
+    def __init__(self,uuid ,title=None, thumbnail=None, description=None,tip=None,reading_text=None,voice=None,transcript=None, skill_id=None, exercise_level=None):
         self.ex_uuid = uuid
         self.title = title
         self.thumbnail = thumbnail
@@ -32,3 +35,7 @@ class Exercise(Base):
         self.skill_id = skill_id
         self.exercise_level = exercise_level
         self.tip = tip
+        # add new
+        self.reading_text = reading_text
+        self.voice = voice
+        self.transcript = transcript

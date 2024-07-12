@@ -78,6 +78,7 @@ async def create_exercise(ex:CreateExerciseDto, session:AsyncSession):
                                  ex.description,
                                  tip = ex.tip,
                                  exercise_level=q.question_level,
+                                 reading_text=ex.reading_text,voice=ex.voice,transcript=ex.transcript
                                  )
     session.add(new_exercise) # add to database
     await session.commit()
@@ -126,7 +127,7 @@ async def delete_exercise_by_uuid(id:str, session:AsyncSession):
     return payload.BaseResponse(
         date=date.today(),
         status=int(status.HTTP_204_NO_CONTENT),
-        payload=[],
+        payload=id,
         message="Exercise has been deleted successfully"
     )
 
@@ -173,6 +174,9 @@ async def list_all_exercises(session:AsyncSession):
                 thumbnail=exercise.thumbnail,
                 description=exercise.description,
                 tip=exercise.tip,
+                reading_text=exercise.reading_text,
+                voice=exercise.voice,
+                transcript=exercise.transcript,
                 # skill_uuid = str(None if ex.skill_id==None else ex.skill_id),
                 questions= all_questions,
                 exercise_level= exercise.exercise_level
@@ -236,7 +240,10 @@ async def find_exercise_by_uuid(id:str, session=AsyncSession)->RepsonseExerciseD
             tip=ex.tip,
             # skill_uuid = str(None if ex.skill_id==None else ex.skill_id),
             questions=all_questions,
-            exercise_level= ex.exercise_level
+            exercise_level= ex.exercise_level,
+            reading_text=ex.reading_text,
+            transcript=ex.transcript,
+            voice=ex.voice
         )
 
 
@@ -288,6 +295,9 @@ async def get_exercises_by_skill_id(skill_id:str, session:AsyncSession):
             thumbnail=ex.thumbnail,
             description=ex.description,
             tip=ex.tip,
+            reading_text=ex.reading_text,
+            transcript=ex.transcript,
+            voice=ex.voice,
             # skill_uuid = str(None if ex.skill_id==None else ex.skill_id),
             questions= all_questions
         ) for ex in all_exercises],
