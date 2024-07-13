@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.database.database import Base, engine
 import os
 
-app = FastAPI()
+app = FastAPI(title="CSTAD - English Club API")
 
 
 

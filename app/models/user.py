@@ -1,5 +1,7 @@
 from sqlalchemy import Column, Integer, String, Boolean,Date
 from app.database.database import Base
+from sqlalchemy.orm import relationship
+from app.models.exercise_complete import ExerciseComplete
 
 class User(Base):
     __tablename__ = "users"
@@ -16,6 +18,8 @@ class User(Base):
     is_deleted = Column(Boolean, default=False)
     is_verified = Column(Boolean, default=False)
     verification_token = Column(String, nullable=True)
+    # 
+    exercise_completes = relationship("ExerciseComplete",back_populates="")
     
     def __init__(self, uuid=None, user_name=None, email=None, password=None, created_date=None, updated_date=None):
         self.uuid = uuid

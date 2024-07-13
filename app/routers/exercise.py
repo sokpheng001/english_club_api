@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends, status
+from fastapi import APIRouter, HTTPException, Depends, status, Query
 from app.database.schemas.exercise import CreateExerciseDto
 from app.database.database import engine, get_db
 from app.database.schemas.token import UserInDB

@@ -107,7 +107,7 @@ async def get_question_by_level(level:str, session=AsyncSession):
 
 async def list_all_questions(session:AsyncSession):
     try:
-        query= select(Question)
+        query= select(Question).order_by(Question.question_level)
         result = await session.execute(query)
         questions = result.scalars().all()
         quests:Question = []
