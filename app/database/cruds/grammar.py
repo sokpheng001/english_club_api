@@ -63,11 +63,11 @@ async def create_grammar(gram: CreateGrammarDto, session: AsyncSession):
         elif ls.vocabulary_id:
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=f"Lesson {less_uuid} is already assigned to another vocabulary 😉")
 
-        if len(gram.lesson_uuids)>1:
-            if i < len(gram.lesson_uuids):
-                if less_uuid == gram.lesson_uuids[i+1]:
-                    raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=f"Lesson {less_uuid} is duplicated 😏")
-                i+=1
+        # if len(gram.lesson_uuids)>1:
+        #     if i < len(gram.lesson_uuids):
+        #         if less_uuid == gram.lesson_uuids[i+1]:
+        #             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=f"Lesson {less_uuid} is duplicated 😏")
+        #         i+=1
 
         response_lessons.append(
             await get_lesson_by_uuid(less_uuid, session)

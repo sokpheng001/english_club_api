@@ -13,9 +13,9 @@ class Exercise(Base):
     thumbnail = Column(String, nullable=True)
     description = Column(String, nullable=True)
     tip = Column(String, nullable=True)
-    reading_text = Column(String, nullable=True)
+    reading_text = Column(String(1000), nullable=True)
     voice = Column(String, nullable=True)
-    transcript = Column(String, nullable=True)
+    transcript = Column(String(1000), nullable=True)
     exercise_level = Column(String, nullable=False)
     #
     skill_id = Column(Integer, ForeignKey("skills.id"), nullable=True)

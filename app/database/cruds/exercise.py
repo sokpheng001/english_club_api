@@ -102,6 +102,10 @@ async def create_exercise(ex:CreateExerciseDto, session:AsyncSession):
             thumbnail=new_exercise.thumbnail,
             description=new_exercise.description,  
             tip=new_exercise.tip,
+            reading_text=new_exercise.reading_text,
+            voice=new_exercise.voice,
+            transcript=new_exercise.transcript,
+            
             exercise_level=q.question_level,
             questions=list_of_questions
         ),
