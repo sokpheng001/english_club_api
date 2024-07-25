@@ -11,7 +11,7 @@ from app.database.schemas.english_level import MyLevel
 import uuid
 
 
-async def findd_vocabulary_by_level(v_level:str, session:AsyncSession):
+async def find_vocabulary_by_level(v_level:str, session:AsyncSession):
     if v_level.upper() not in MyLevel.__members__:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Level should be one of A1 to C2, but you given {v_level}")
     query = select(Vocabulary).where(Vocabulary.vocabulary_level.ilike(v_level))
@@ -38,12 +38,13 @@ async def get_all_vocabularies(session:AsyncSession):
     all_vocabularies:ResponseVocabularyDto= []
     # get all lessons in vocabularies
     for v in vs:
+        
         all_vocabularies.append(ResponseVocabularyDto(
-            vocabulary_uuid=v.vocabulary_uuid,
-            titles=v.vocabulary_name,
+            vocabulary_uuid=v.vocab_uuid,
+            titles=v.vocab_name,
             description=v.description,
             thumbnail_url=v.thumbnail,
-            lessons= get_lesson_by_vocabulary_id(v.id)
+            lessons= await get_lesson_by_vocabulary_id(v.id, session=session)
         ))
     return all_vocabularies
 async def create_vocabulary(vo:CreateVocabularyDto, session:AssertionError):
@@ -64,11 +65,11 @@ async def create_vocabulary(vo:CreateVocabularyDto, session:AssertionError):
         elif ls.vocabulary_id:
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=f"Lesson {less_uuid} is already assigned to another vocabulary 😉")
 
-        if len(vo.lesson_uuids)>1:
-            if i < len(vo.lesson_uuids):
-                if less_uuid == vo.lesson_uuids[i+1]:
-                    raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=f"Lesson {less_uuid} is duplicated 😏")
-                i+=1
+        # if len(vo.lesson_uuids)>1:
+        #     if i < len(vo.lesson_uuids):
+        #         if less_uuid == vo.lesson_uuids[i+1]:
+        #             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=f"Lesson {less_uuid} is duplicated 😏")
+        #         i+=1
 
         response_lessons.append(
             await get_lesson_by_uuid(less_uuid, session)
@@ -93,7 +94,7 @@ async def create_vocabulary(vo:CreateVocabularyDto, session:AssertionError):
 
     return ResponseVocabularyDto(
         vocabulary_uuid=new_vocab.vocab_uuid,
-        title=new_vocab.vocab_name,
+        titles=new_vocab.vocab_name,
         description=new_vocab.description,
         thumbnail_url=new_vocab.thumbnail,
         lessons=response_lessons

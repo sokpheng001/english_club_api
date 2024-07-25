@@ -41,6 +41,14 @@ async def get_lesson_by_vocabulary_id(vocab_id:int, session:AsyncSession):
                 section_level=sec.section_level,
                 examples=sec.examples
             ))
+        list_of_exercises:RepsonseExerciseDto = []
+        ex = select(Exercise).where(Exercise.lesson_id==les.id)
+        result = await session.execute(ex)
+        exs = result.scalars().all()
+        for ex in exs:
+            list_of_exercises.append(
+                await find_exercise_by_uuid(ex.ex_uuid, session)
+            )
         all_lessons.append(
             lesson.ResponseLessonDto(
                 lesson_uuid=les.lesson_uuid,
@@ -48,7 +56,8 @@ async def get_lesson_by_vocabulary_id(vocab_id:int, session:AsyncSession):
                 description=les.description,
                 thumbnail=les.thumbnail,
                 sections=list_of_sections,
-                lesson_level=les.lesson_level
+                lesson_level=les.lesson_level,
+                exercises=list_of_exercises
         ) )
     return all_lessons
 async def get_lesson_by_grammar_id(grammar_id:int, session:AsyncSession):
@@ -73,6 +82,14 @@ async def get_lesson_by_grammar_id(grammar_id:int, session:AsyncSession):
                 section_level=sec.section_level,
                 examples=sec.examples
             ))
+        list_of_exercises:RepsonseExerciseDto = []
+        ex = select(Exercise).where(Exercise.lesson_id==les.id)
+        result = await session.execute(ex)
+        exs = result.scalars().all()
+        for ex in exs:
+            list_of_exercises.append(
+                await find_exercise_by_uuid(ex.ex_uuid, session)
+            )
         all_lessons.append(
             lesson.ResponseLessonDto(
                 lesson_uuid=les.lesson_uuid,
@@ -80,7 +97,8 @@ async def get_lesson_by_grammar_id(grammar_id:int, session:AsyncSession):
                 description=les.description,
                 thumbnail=les.thumbnail,
                 sections=list_of_sections,
-                lesson_level=les.lesson_level
+                lesson_level=les.lesson_level,
+                exercises=list_of_exercises
         ) )
     return all_lessons
 async def create_new_lessons(is_included_exercies:bool,less:CreateLessonDto, session: AsyncSession):
@@ -204,13 +222,22 @@ async def get_lesson_by_level(level:str, session:AsyncSession):
             section_level=sec.section_level,
             examples=sec.examples
         ))
+    list_of_exercises:RepsonseExerciseDto = []
+    ex = select(Exercise).where(Exercise.lesson_id==less.id)
+    result = await session.execute(ex)
+    exs = result.scalars().all()
+    for ex in exs:
+        list_of_exercises.append(
+            await find_exercise_by_uuid(ex.ex_uuid, session)
+        )
     return lesson.ResponseLessonDto(
             lesson_uuid=less.lesson_uuid,
             lesson_title=less.name,
             description=less.description,
             thumbnail=less.thumbnail,
             sections=list_of_sections,
-            lesson_level=less.lesson_level
+            lesson_level=less.lesson_level,
+            exercises=list_of_exercises
         )
 
 async def get_lesson_by_uuid(ls_uuid, session:AsyncSession)->lesson.ResponseLessonDto:
@@ -233,13 +260,23 @@ async def get_lesson_by_uuid(ls_uuid, session:AsyncSession)->lesson.ResponseLess
             section_level=sec.section_level,
             examples=sec.examples
         ))
+
+    list_of_exercises:RepsonseExerciseDto = []
+    ex = select(Exercise).where(Exercise.lesson_id==less.id)
+    result = await session.execute(ex)
+    exs = result.scalars().all()
+    for ex in exs:
+        list_of_exercises.append(
+            await find_exercise_by_uuid(ex.ex_uuid, session)
+        )
     return lesson.ResponseLessonDto(
             lesson_uuid=less.lesson_uuid,
             lesson_title=less.name,
             description=less.description,
             thumbnail=less.thumbnail,
             sections=list_of_sections,
-            lesson_level=less.lesson_level
+            lesson_level=less.lesson_level,
+            exercises=list_of_exercises
         )
 
 
