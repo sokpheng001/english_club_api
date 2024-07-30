@@ -19,6 +19,38 @@ import uuid
 
 
 
+async def try_again_submit_exercise(exercise_id,session:AsyncSession):
+    
+    for ex_uuid in exercise_id.exercises_uuids:
+        # find the exercise
+        ex = select(Exercise).where(Exercise.ex_uuid==ex_uuid)
+        result = await session.execute(ex)
+        exx:Exercise = result.scalars().first()
+
+        if exx:
+            # if not is_valid_uuid(exercise_id.user_uuid):
+            #     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid exercise uuid: '{exercise_id.user_uuid}'")
+            #  find user
+            user = select(User).where(User.uuid == exercise_id.user_uuid)
+            re = await session.execute(user)
+            u:User = re.scalars().first()
+            if u:
+                query = select(ExerciseComplete).where(ExerciseComplete.exercise_id == exx.id and ExerciseComplete.user_id == u.id)
+                re = await session.execute(query)
+                com_exercises:ExerciseComplete = re.scalars().first()
+                if com_exercises.user_id !=None:
+                    com_exercises.user_id = None
+                    session.add(com_exercises)
+                    await session.commit()
+                    await session.refresh(com_exercises)
+            # else:
+            #     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"User with uuid: '{exercise_id.user_uuid}' not found")
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Exercise with uuid: '{ex_uuid}' not found")
+            # 
+    return None
+
+    
 async def get_submit_exercise_on_user_uuid_and_level(uid:str,level:str,session:AsyncSession):
     if not is_valid_uuid(uid):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid user uuid ' {uid} '")
