@@ -34,17 +34,17 @@ async def get_grammar_by_level(level:str, session:AsyncSession):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Level should be one of A1 to C2, but you given {level}")
     query = select(Grammar).where(Grammar.grammar_level.ilike(level))
     result = await session.execute(query)
-    g = result.scalars().first() 
-    if not g:
+    gs = result.scalars().all()
+    if not gs:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Grammar not found")
-    return ResponseGrammarDto(
+    return [ ResponseGrammarDto(
         grammar_uuid=g.grammar_uuid,
         title=g.grammar_name,
         description=g.description,
         thumbnail=g.thumbnail,
         grammar_level=g.grammar_level,
         lessons= await get_lesson_by_grammar_id(g.id, session)
-    )
+    ) for g in gs ]
 async def create_grammar(gram: CreateGrammarDto, session: AsyncSession):
     # check if valid uuid of lessons
     response_lessons:ResponseLessonDto = []

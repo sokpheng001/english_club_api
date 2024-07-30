@@ -14,5 +14,6 @@ class ResponseVocabularyDto(BaseModel):
     vocabulary_uuid:str
     titles:str
     thumbnail_url:str
+    vocab_level: Optional[str] = None
     description:str
     lessons: Optional[list[ResponseLessonDto]] = None

@@ -39,7 +39,8 @@ async def get_lesson_by_vocabulary_id(vocab_id:int, session:AsyncSession):
                 description=sec.description,
                 thumbnail_url=sec.thumbnail,
                 section_level=sec.section_level,
-                examples=sec.examples
+                examples=sec.examples,
+                voice=sec.voice
             ))
         list_of_exercises:RepsonseExerciseDto = []
         ex = select(Exercise).where(Exercise.lesson_id==les.id)
@@ -205,40 +206,48 @@ async def get_lesson_by_level(level:str, session:AsyncSession):
     
     query = select(Lesson).filter(Lesson.lesson_level.ilike(level))
     result = await session.execute(query)
-    less:Lesson = result.scalars().first()
+    less:Lesson = result.scalars().all()
     if not less:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Lesson not found 😶‍🌫️")
     
-    qs = select(Section).filter(Section.lesson_id==less.id)
-    result = await session.execute(qs)
-    sections = result.scalars().all()
-    list_of_sections:ResponseSectionDto = []
-    for sec in sections:
-        list_of_sections.append(ResponseSectionDto(
-            section_uuid=sec.section_uuid,
-            title=sec.section_name,
-            description=sec.description,
-            thumbnail_url=sec.thumbnail,
-            section_level=sec.section_level,
-            examples=sec.examples
-        ))
-    list_of_exercises:RepsonseExerciseDto = []
-    ex = select(Exercise).where(Exercise.lesson_id==less.id)
-    result = await session.execute(ex)
-    exs = result.scalars().all()
-    for ex in exs:
-        list_of_exercises.append(
-            await find_exercise_by_uuid(ex.ex_uuid, session)
-        )
-    return lesson.ResponseLessonDto(
-            lesson_uuid=less.lesson_uuid,
-            lesson_title=less.name,
-            description=less.description,
-            thumbnail=less.thumbnail,
+    lesss:lesson.ResponseLessonDto = []
+    
+    for les in less:
+        qs = select(Section).filter(Section.lesson_id==les.id)
+        result = await session.execute(qs)
+        sections = result.scalars().all()
+        list_of_sections:ResponseSectionDto = []
+        for sec in sections:
+            list_of_sections.append(ResponseSectionDto(
+                section_uuid=sec.section_uuid,
+                title=sec.section_name,
+                description=sec.description,
+                thumbnail_url=sec.thumbnail,
+                section_level=sec.section_level,
+                examples=sec.examples,
+                voice=sec.voice
+            ))
+        list_of_exercises:RepsonseExerciseDto = []
+        ex = select(Exercise).where(Exercise.lesson_id==les.id)
+        result = await session.execute(ex)
+        exs = result.scalars().all()
+        for ex in exs:
+            list_of_exercises.append(
+                await find_exercise_by_uuid(ex.ex_uuid, session)
+            )
+        lesss.append(
+            lesson.ResponseLessonDto(
+            lesson_uuid=les.lesson_uuid,
+            lesson_title=les.name,
+            description=les.description,
+            thumbnail=les.thumbnail,
             sections=list_of_sections,
-            lesson_level=less.lesson_level,
+            lesson_level=les.lesson_level,
             exercises=list_of_exercises
         )
+        )
+        
+    return lesss
 
 async def get_lesson_by_uuid(ls_uuid, session:AsyncSession)->lesson.ResponseLessonDto:
     query = select(Lesson).filter(Lesson.lesson_uuid==ls_uuid)

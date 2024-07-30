@@ -13,7 +13,7 @@ class Question(Base):
     video = Column(String,nullable=True)
     image = Column(String, nullable=True)
     type = Column(String,nullable=False)  # e.g., "multiple-choice", "fill-in-the-blank", "true-false"
-    correct_answer = Column(JSON,nullable=False) 
+    correct_answer = Column(JSON,nullable=False)    
     question_level = Column(String, nullable=False)
 
     #relationsip

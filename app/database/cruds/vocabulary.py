@@ -23,11 +23,11 @@ async def find_vocabulary_by_level(v_level:str, session:AsyncSession):
     # get all lessons in vocabularies
     for v in vs:
         all_vocabularies.append(ResponseVocabularyDto(
-            vocabulary_uuid=v.vocabulary_uuid,
-            titles=v.vocabulary_name,
+            vocabulary_uuid=v.vocab_uuid,
+            titles=v.vocab_name,
             description=v.description,
             thumbnail_url=v.thumbnail,
-            lessons= get_lesson_by_vocabulary_id(v.id)
+            lessons=  await get_lesson_by_vocabulary_id(v.id, session)
         ))
     return all_vocabularies
 
@@ -44,7 +44,10 @@ async def get_all_vocabularies(session:AsyncSession):
             titles=v.vocab_name,
             description=v.description,
             thumbnail_url=v.thumbnail,
-            lessons= await get_lesson_by_vocabulary_id(v.id, session=session)
+            vocab_level=v.vocabulary_level ,
+            lessons= await get_lesson_by_vocabulary_id(v.id, session=session),
+            
+            
         ))
     return all_vocabularies
 async def create_vocabulary(vo:CreateVocabularyDto, session:AssertionError):
@@ -78,7 +81,7 @@ async def create_vocabulary(vo:CreateVocabularyDto, session:AssertionError):
         # validate lesson uuid is not the same
 
     v_uuid = uuid.uuid4()
-    new_vocab = Vocabulary(vocab_uuid=str(v_uuid), vocabulary_name=vo.title, description=vo.description, thumbnail=vo.thumbnail_url)
+    new_vocab = Vocabulary(vocab_uuid=str(v_uuid), vocabulary_level=response_lessons[0].lesson_level ,vocabulary_name=vo.title, description=vo.description, thumbnail=vo.thumbnail_url)
 
     session.add(new_vocab)
     await session.commit()
