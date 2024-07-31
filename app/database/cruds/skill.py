@@ -56,6 +56,9 @@ async def create_new_skill(sk:skill.CreateSkillDto, session=AsyncSession):
             que = await session.execute(ex)
             result:Exercise = que.scalars().first()
 
+            if not result:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Exercise not found")
+
             if sk.skill_level.upper() !=result.exercise_level.upper():
                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Quesion level should be the same as skill level, please check your exercise uuid given 🙈")
 

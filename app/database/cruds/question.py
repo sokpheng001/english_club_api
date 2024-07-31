@@ -124,7 +124,6 @@ async def list_all_questions(session:AsyncSession):
                 get_all_choices.append(choice.ResponseChoiceDto(
                     choice_uuid= ch.choice_uuid,
                     text=ch.choice_text,
-                    
                     is_correct=ch.is_correct
                 ))
             response.append(question.ResponseQuestionDto(

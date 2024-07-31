@@ -9,7 +9,7 @@ class CreateSectionDto(BaseModel):
     title: str
     description: str
     section_level: str
-    voice: Optional[list[VoiceUrl]]
+    voice: Optional[list[VoiceUrl]] = [VoiceUrl,VoiceUrl]
     examples: list[Example]
     thumbnail_url: Optional[str] = None
 
